@@ -1,0 +1,22 @@
+{# mcadmin/templates/layout.html #}
+<!DOCTYPE html>
+<html>
+<head>
+    {% block head %}
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+        <title>McAdmin - {% block title %}{% endblock %}</title>
+    {% endblock %}
+</head>
+<body>
+<main>
+    {% block content %}{% endblock %}
+</main>
+<footer>
+    {% block footer %}
+    {% endblock %}
+</footer>
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

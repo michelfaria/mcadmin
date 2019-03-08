@@ -1,0 +1,26 @@
+/* mcadmin/static/styles.css */
+
+html {
+    font-family: 'Roboto', serif;
+}
+
+.fancy-btn {
+    padding: 10px;
+
+    border: none;
+    border-radius: 5px;
+
+    text-align: center;
+
+    background-image: url("/static/img/log.jpg");
+
+    color: white;
+    -webkit-text-fill-color: white;
+    -webkit-text-stroke-width: thin;
+    -webkit-text-stroke-color: black;
+
+    box-shadow: 0 0 1px black;
+    -moz-box-shadow: 0 0 1px black;
+    -o-box-shadow: 0 0 1px black;
+    -webkit-box-shadow: 0 0 1px black;
+}

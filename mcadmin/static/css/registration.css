@@ -1,0 +1,45 @@
+/* mcadmin/static/registration.css */
+
+html, body, main {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
+
+.background-pic {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background-image: url("/static/img/water.jpg");
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+    z-index: -1;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.card {
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    border-radius: 10px;
+
+    background-color: whitesmoke;
+
+    box-shadow: 0 0 10px black;
+    -moz-box-shadow: 0 0 10px black;
+    -o-box-shadow: 0 0 10px black;
+    -webkit-box-shadow: 0 0 10px black;
+}
+
+.card form {
+    margin: 28px;
+}
+
+.card button, .card input {
+    margin: 5px;
+}
