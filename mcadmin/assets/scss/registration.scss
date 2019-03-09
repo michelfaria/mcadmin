@@ -1,5 +1,7 @@
 // mcadmin/assets/scss/registration.scss
 
+@import "values";
+
 html, body, main {
   height: 100%;
   width: 100%;
@@ -10,6 +12,7 @@ html, body, main {
   position: absolute;
   height: 100%;
   width: 100%;
+
   background-image: url("/static/img/water.jpg");
   filter: blur(4px);
   z-index: -1;
@@ -22,33 +25,39 @@ html, body, main {
   height: 100%;
 }
 
-.card {
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 2px 2px 3px black;
+.mc-card {
+  padding: 50px;
 }
 
-.card form {
-  margin: 28px;
-  padding: 0 50px;
-
+.mc-card form {
   display: flex;
   justify-content: center;
   flex-direction: column;
   align-items: center;
 }
 
-.card form h2 {
-  margin-bottom: 50px;
+@media screen and (max-device-width: $sm-tablet-width-max) {
+  .mc-card .mc-input, .mc-card form small {
+    margin: 10px 0;
+  }
 }
 
-.card form small {
+.mc-card form h2 {
+  margin-bottom: 50px;
+
+  @media screen and (max-device-width: $sm-tablet-width-max) {
+    font-size: 48pt;
+  }
+}
+
+.mc-card form small {
   color: darkgray;
   align-self: flex-start;
-}
 
-.card .mc-input {
   margin-top: 5px;
   margin-bottom: 40px;
+}
 
+.mc-card .mc-input {
   align-self: stretch;
 }

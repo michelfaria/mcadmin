@@ -1,4 +1,5 @@
 // mcadmin/assets/scss/styles.scss
+@import "values";
 
 @font-face {
   font-family: 'F77 Minecraft';
@@ -7,28 +8,87 @@
 
 * {
   font-family: 'F77 Minecraft', sans-serif;
+
+  @media screen and (max-device-width: $sm-tablet-width-max) {
+    font-size: xx-large;
+  }
 }
 
 .mc-grn-btn {
   border: 2px solid black;
   padding: 8px 30px;
-
   box-shadow: 2px 2px 0 gray;
-  -moz-box-shadow: 2px 2px 0 gray;
-  -o-box-shadow: 2px 2px 0 gray;
-  -webkit-box-shadow: 2px 2px 0 gray;
-
   background-color: limegreen;
   color: white;
-
-  font-size: medium;
   text-shadow: 1px 1px 2px black;
-
   cursor: pointer;
+
+  @media screen and (min-device-width: $md-tablet-width-min) {
+    font-size: medium;
+  }
+
+  @media screen and (max-device-width: $sm-tablet-width-max) {
+    font-size: 38pt;
+  }
 }
 
 .mc-input {
   padding: 8px 5px;
   border: 2px solid gray;
+
+  @media screen and (max-device-width: $sm-tablet-width-max) {
+    padding: 30px 10px;
+  }
 }
 
+.mc-card {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mc-card.growing {
+  animation-duration: 1s, 0.3s;
+  animation-name: mc-card-grow, mc-card-raise;
+  animation-timing-function: ease-out, ease-out;
+}
+
+@keyframes mc-card-grow {
+  from {
+    max-width: 1%;
+  }
+  40% {
+    max-width: 1%;
+  }
+  to {
+    max-width: 100%
+  }
+}
+
+@keyframes mc-card-raise {
+  from {
+    position: absolute;
+    transform: translate(0, 200%);
+  }
+  to {
+    position: relative;
+    transform: translate(0, 0);
+  }
+}
+
+.mc-fade-in {
+  animation-duration: 1s;
+  animation-name: mc-fade-in;
+  animation-timing-function: cubic-bezier(1,-0.83,1,1);
+}
+
+@keyframes mc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 100%;
+  }
+}

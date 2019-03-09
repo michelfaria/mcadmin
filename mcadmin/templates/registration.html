@@ -11,23 +11,23 @@
 {% block content %}
     <div class="background-pic"></div>
     <div class="container">
-        <div class="card">
-            <form class="registration-form"
+        <div class="mc-card growing">
+            <form class="registration-form mc-fade-in"
                   action="{{ url_for('register') }}"
                   method="post">
                 <h2>Register</h2>
-                <small id="password-help">Please make sure it is strong enough</small>
                 <input type="password"
                        id="password-input"
                        class="mc-input"
                        aria-describedby="password-help"
                        placeholder="Enter password"/>
-                <small id="repeat-password-help">Make sure the passwords match</small>
+                <small id="password-help">Please make sure it is strong enough</small>
                 <input type="password"
                        id="repeat-password-input"
                        aria-describedby="password-help"
                        class="mc-input"
                        placeholder="Confirm password"/>
+                <small id="repeat-password-help">Make sure the passwords match</small>
                 {{ form.csrf_token }}
                 <button class="mc-grn-btn" type="submit">Submit</button>
             </form>
