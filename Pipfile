@@ -11,6 +11,8 @@ flask = "*"
 jinja2 = "*"
 flask-wtf = "*"
 wtforms = "*"
+flask-assets = "*"
+flask-scss = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,13 +1,17 @@
 # mcadmin/server.py
 
-from flask import Flask, render_template, abort, request, redirect
-import subprocess
 import os.path
+
+from flask import Flask
+from flask_scss import Scss
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(32)
+Scss(app)
 
+# noinspection PyUnresolvedReferences
 from mcadmin.routes import index, register
+
 
 def start():
     app.run()
