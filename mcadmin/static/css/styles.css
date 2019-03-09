@@ -1,26 +1,33 @@
 /* mcadmin/static/styles.css */
 
-html {
-    font-family: 'Roboto', serif;
+@font-face {
+    font-family: 'F77 Minecraft';
+    src: local('F77 Minecraft'), url("/static/fonts/f77_minecraft.ttf") format("truetype");
 }
 
-.fancy-btn {
-    padding: 10px;
+* {
+    font-family: 'F77 Minecraft', sans-serif;
+}
 
-    border: none;
-    border-radius: 5px;
+.mc-grn-btn {
+    border: 2px solid black;
+    padding: 8px 30px;
 
-    text-align: center;
+    box-shadow: 2px 2px 0 gray;
+    -moz-box-shadow: 2px 2px 0 gray;
+    -o-box-shadow: 2px 2px 0 gray;
+    -webkit-box-shadow: 2px 2px 0 gray;
 
-    background-image: url("/static/img/log.jpg");
-
+    background-color: limegreen;
     color: white;
-    -webkit-text-fill-color: white;
-    -webkit-text-stroke-width: thin;
-    -webkit-text-stroke-color: black;
 
-    box-shadow: 0 0 1px black;
-    -moz-box-shadow: 0 0 1px black;
-    -o-box-shadow: 0 0 1px black;
-    -webkit-box-shadow: 0 0 1px black;
+    font-size: medium;
+    text-shadow: 1px 1px 2px black;
+
+    cursor: pointer;
+}
+
+.mc-input {
+    padding: 8px 5px;
+    border: 2px solid gray;
 }

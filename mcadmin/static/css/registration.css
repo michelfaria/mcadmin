@@ -17,29 +17,54 @@ html, body, main {
 }
 
 .container {
-    display: flex;
     justify-content: center;
+    -webkit-justify-content: center;
+
     align-items: center;
+    -webkit-align-items: center;
+
+    display: flex;
     height: 100%;
 }
 
 .card {
-    -webkit-border-radius: 5px;
-    -moz-border-radius: 5px;
-    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
 
-    background-color: whitesmoke;
-
-    box-shadow: 0 0 10px black;
-    -moz-box-shadow: 0 0 10px black;
-    -o-box-shadow: 0 0 10px black;
-    -webkit-box-shadow: 0 0 10px black;
+    box-shadow: 2px 2px 3px black;
 }
 
 .card form {
     margin: 28px;
+
+    display: flex;
+
+    justify-content: center;
+    -webkit-justify-content: center;
+
+    flex-direction: column;
+    -ms-flex-direction: column;
+    -webkit-flex-direction: column;
+
+    align-items: center;
+    -webkit-align-items: center;
+
+    padding: 0 50px;
 }
 
-.card button, .card input {
-    margin: 5px;
+.card form h2 {
+    margin-bottom: 50px;
+}
+
+.card form small {
+    color: darkgray;
+    align-self: flex-start;
+    -webkit-align-self: flex-start;
+}
+
+.card .mc-input {
+    align-self: stretch;
+    -webkit-align-self: stretch;
+
+    margin-top: 5px;
+    margin-bottom: 40px;
 }
