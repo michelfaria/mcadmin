@@ -9,28 +9,54 @@
 {% endblock %}
 
 {% block content %}
-    <div class="background-pic"></div>
     <div class="container">
         <div class="mc-card growing">
-            <form class="registration-form mc-fade-in"
-                  action="{{ url_for('register') }}"
-                  method="post">
+            <form class="registration-form mc-fade-in" id="registration-form">
                 <h2>Register</h2>
                 <input type="password"
                        id="password-input"
+                       name="password"
                        class="mc-input"
                        aria-describedby="password-help"
-                       placeholder="Enter password"/>
-                <small id="password-help">Please make sure it is strong enough</small>
+                       placeholder="Enter password"
+                       required/>
+                <small id="password-help">This will be your password! Make sure it's strong!</small>
                 <input type="password"
                        id="repeat-password-input"
+                       name="repeat_password"
                        aria-describedby="password-help"
                        class="mc-input"
-                       placeholder="Confirm password"/>
-                <small id="repeat-password-help">Make sure the passwords match</small>
+                       placeholder="Confirm password"
+                       required/>
+                <small id="repeat-password-help">Type the same password as you did above.</small>
                 {{ form.csrf_token }}
-                <button class="mc-grn-btn" type="submit">Submit</button>
             </form>
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        var form;
+        var submitFormBtn;
+        var passwordInp;
+        var repeatPasswordInp;
+
+        window.onload = function () {
+            // find elements
+            form = document.getElementById("registration-form");
+            passwordInp = document.getElementById("password-input");
+            repeatPasswordInp = document.getElementById("repeat-password-input");
+
+            // submit form button
+            submitFormBtn = document.createElement("button");
+            submitFormBtn.className = "mc-grn-btn transition-in-from-right";
+            submitFormBtn.id = "submit-form-btn";
+            submitFormBtn.type = "submit";
+            submitFormBtn.textContent = "Submit";
+
+            // set up event listeners
+            // form.addEventListener("submit", onFormSubmit, false);
+        };
+    </script>
 {% endblock %}

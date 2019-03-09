@@ -1,26 +1,38 @@
 // mcadmin/assets/scss/styles.scss
+/**
+ Sections:
+   [general]
+   [animations]
+ */
 @import "values";
 
+// [general]
+
 @font-face {
-  font-family: 'F77 Minecraft';
-  src: local('F77 Minecraft'), url("/static/fonts/f77_minecraft.ttf") format("truetype");
+  font-family: 'White Rabbit';
+  src: local('White Rabbit'), url("/static/fonts/WhiteRabbit.otf") format("opentype");
 }
 
 * {
-  font-family: 'F77 Minecraft', sans-serif;
+  font-family: "White Rabbit", sans-serif;
 
   @media screen and (max-device-width: $sm-tablet-width-max) {
     font-size: xx-large;
   }
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 .mc-grn-btn {
-  border: 2px solid black;
   padding: 8px 30px;
-  box-shadow: 2px 2px 0 gray;
+
   background-color: limegreen;
-  color: white;
+  border: 2px solid black;
+  box-shadow: 2px 2px 0 gray;
   text-shadow: 1px 1px 2px black;
+  color: white;
   cursor: pointer;
 
   @media screen and (min-device-width: $md-tablet-width-min) {
@@ -28,12 +40,13 @@
   }
 
   @media screen and (max-device-width: $sm-tablet-width-max) {
-    font-size: 38pt;
+    font-size: 34pt;
   }
 }
 
 .mc-input {
   padding: 8px 5px;
+
   border: 2px solid gray;
 
   @media screen and (max-device-width: $sm-tablet-width-max) {
@@ -42,12 +55,16 @@
 }
 
 .mc-card {
-  background-color: rgba(255, 255, 255, 0.8);
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+  padding: 50px;
+  max-width: 80vw;
 
   overflow: hidden;
-  white-space: nowrap;
+
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
+
+// [animations]
 
 .mc-card.growing {
   animation-duration: 1s, 0.3s;
@@ -57,13 +74,13 @@
 
 @keyframes mc-card-grow {
   from {
-    max-width: 1%;
+    max-width: 1vw;
   }
   40% {
-    max-width: 1%;
+    max-width: 1vw;
   }
   to {
-    max-width: 100%
+    max-width: 80vw;
   }
 }
 
@@ -81,7 +98,7 @@
 .mc-fade-in {
   animation-duration: 1s;
   animation-name: mc-fade-in;
-  animation-timing-function: cubic-bezier(1,-0.83,1,1);
+  animation-timing-function: cubic-bezier(1, -0.83, 1, 1);
 }
 
 @keyframes mc-fade-in {
@@ -90,5 +107,33 @@
   }
   to {
     opacity: 100%;
+  }
+}
+
+.transition-in-from-right {
+  animation-duration: 1s;
+  animation-name: transition-in-from-right;
+}
+
+@keyframes transition-in-from-right {
+  from {
+    transform: translate(400%, 0);
+  }
+  to {
+    transform: translate(0, 0);
+  }
+}
+
+.transition-out-to-right {
+  animation-duration: 1s;
+  animation-name: transition-out-to-right;
+}
+
+@keyframes transition-out-to-right {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(400%, 0);
   }
 }

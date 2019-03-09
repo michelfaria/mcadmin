@@ -6,4 +6,4 @@ from wtforms.validators import DataRequired
 
 
 class RegistrationForm(Form):
-    password = PasswordField('Password', validators=[DataRequired()])
+    password = PasswordField('password', validators=[DataRequired()])

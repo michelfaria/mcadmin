@@ -1,32 +1,40 @@
 // mcadmin/assets/scss/registration.scss
-
 @import "values";
 
 html, body, main {
   height: 100%;
   width: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
-.background-pic {
-  position: absolute;
+.container:before {
+  content: "";
+
+  position: fixed;
   height: 100%;
   width: 100%;
+  z-index: -1;
 
   background-image: url("/static/img/water.jpg");
+  background-size: cover;
+
   filter: blur(4px);
-  z-index: -1;
+  transform: scale(1.03);
 }
 
 .container {
+  height: 100%;
+
+  display: flex;
   justify-content: center;
   align-items: center;
-  display: flex;
-  height: 100%;
+
+  overflow: hidden;
 }
 
 .mc-card {
-  padding: 50px;
+  transition: height 1s;
 }
 
 .mc-card form {
@@ -51,11 +59,12 @@ html, body, main {
 }
 
 .mc-card form small {
-  color: darkgray;
   align-self: flex-start;
 
   margin-top: 5px;
   margin-bottom: 40px;
+
+  color: darkgray;
 }
 
 .mc-card .mc-input {
