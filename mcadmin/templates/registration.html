@@ -19,6 +19,7 @@
                        class="mc-input"
                        aria-describedby="password-help"
                        placeholder="Enter password"
+                       pattern=".{8,255}"
                        required/>
                 <small id="password-help">This will be your password! Make sure it's strong!</small>
                 <input type="password"
@@ -57,6 +58,16 @@
 
             // set up event listeners
             // form.addEventListener("submit", onFormSubmit, false);
+            passwordInp.onchange = validatePasswords;
+            repeatPasswordInp.onkeyup = validatePasswords;
         };
+
+        function validatePasswords() {
+            if (passwordInp.value !== repeatPasswordInp.value) {
+                repeatPasswordInp.setCustomValidity("The passwords don't match!");
+            } else {
+                repeatPasswordInp.setCustomValidity("");
+            }
+        }
     </script>
 {% endblock %}
