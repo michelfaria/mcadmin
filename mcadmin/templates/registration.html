@@ -13,22 +13,32 @@
         <div class="mc-card growing">
             <form class="registration-form mc-fade-in" id="registration-form">
                 <h2>Register</h2>
+
                 <input type="password"
                        id="password-input"
                        name="password"
                        class="mc-input"
                        aria-describedby="password-help"
                        placeholder="Enter password"
-                       required/>
+                       pattern=".{8,255}"
+                       required
+                       data-value-missing="Please enter a password!"
+                       data-pattern-mismatch="Please ensure your password has at least 8 characters and at most 255!"/>
                 <small id="password-help">This will be your password! Make sure it's strong!</small>
+
                 <input type="password"
                        id="repeat-password-input"
                        name="repeat_password"
                        aria-describedby="password-help"
                        class="mc-input"
                        placeholder="Confirm password"
-                       required/>
+                       required
+                       data-value-missing="Please repeat your password here!
+                        This will ensure that you typed your password correctly."
+                       data-passwords-mismatch="The password you typed here does not match the one you typed above.
+                        Please type your password again to ensure there were no mistakes."/>
                 <small id="repeat-password-help">Type the same password as you did above.</small>
+
                 {{ form.csrf_token }}
             </form>
         </div>
@@ -36,27 +46,40 @@
 {% endblock %}
 
 {% block scripts %}
+
+    <script type="text/javascript" src="{{ url_for('static', filename='js/forms.js') }}"></script>
+
     <script type="text/javascript">
+        // #registration-form
         var form;
-        var submitFormBtn;
-        var passwordInp;
-        var repeatPasswordInp;
+
+        var submitBtn;
+        (function createButton() {
+            var b = document.createElement("button");
+            b.className = "mc-grn-btn transition-in-from-right";
+            b.id = "submit-form-btn";
+            b.type = "submit";
+            b.textContent = "Submit";
+            submitBtn = b;
+        })();
 
         window.onload = function () {
-            // find elements
             form = document.getElementById("registration-form");
-            passwordInp = document.getElementById("password-input");
-            repeatPasswordInp = document.getElementById("repeat-password-input");
-
-            // submit form button
-            submitFormBtn = document.createElement("button");
-            submitFormBtn.className = "mc-grn-btn transition-in-from-right";
-            submitFormBtn.id = "submit-form-btn";
-            submitFormBtn.type = "submit";
-            submitFormBtn.textContent = "Submit";
-
-            // set up event listeners
-            // form.addEventListener("submit", onFormSubmit, false);
+            FormsJs.register(form, onInputInvalid, onInputValid);
         };
+
+        /**
+         * @param {HTMLInputElement} el
+         */
+        function onInputValid(el) {
+            console.log('Valid: ' + el);
+        }
+
+        /**
+         * @param {HTMLInputElement} el
+         */
+        function onInputInvalid(el) {
+            console.log('Invalid: ' + el);
+        }
     </script>
 {% endblock %}

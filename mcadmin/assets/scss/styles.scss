@@ -54,6 +54,14 @@
   }
 }
 
+.mc-input.formsjs-valid {
+  border: 2px solid $valid-input-field;
+}
+
+.mc-input.formsjs-invalid {
+  border: 2px solid $invalid-input-field;
+}
+
 .mc-card {
   padding: 50px;
   max-width: 80vw;
