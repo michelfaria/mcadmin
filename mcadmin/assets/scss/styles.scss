@@ -6,6 +6,12 @@
  */
 @import "values";
 
+// @formatter:off
+$mc-card-max-width = 600px;
+$mc-card-max-height = 600px;
+$mc-card-max-height-mobile = 98vw;
+// @formatter:on
+
 // [general]
 
 @font-face {
@@ -27,49 +33,33 @@
 
 .mc-grn-btn {
   padding: 8px 30px;
-
   background-color: limegreen;
   border: 2px solid black;
   box-shadow: 2px 2px 0 gray;
   text-shadow: 1px 1px 2px black;
   color: white;
   cursor: pointer;
-
-  @media screen and (min-device-width: $md-tablet-width-min) {
-    font-size: medium;
-  }
-
-  @media screen and (max-device-width: $sm-tablet-width-max) {
-    font-size: 34pt;
-  }
+  font-size: larger;
 }
 
 .mc-input {
-  padding: 8px 5px;
-
   border: 2px solid gray;
-
-  @media screen and (max-device-width: $sm-tablet-width-max) {
-    padding: 30px 10px;
-  }
-}
-
-.mc-input.formsjs-valid {
-  border: 2px solid $valid-input-field;
-}
-
-.mc-input.formsjs-invalid {
-  border: 2px solid $invalid-input-field;
+  padding: 10px 10px;
 }
 
 .mc-card {
   padding: 50px;
-  max-width: 80vw;
+  max-width: $mc-card-max-width;
+  max-height: $mc-card-max-height;
 
   overflow: hidden;
 
   background-color: rgba(255, 255, 255, 0.8);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+
+  @media screen and (max-device-width: $sm-tablet-width-max) {
+    max-height: $mc-card-max-height-mobile;
+  }
 }
 
 // [animations]
@@ -88,7 +78,7 @@
     max-width: 1vw;
   }
   to {
-    max-width: 80vw;
+    max-width: $mc-card-max-width;
   }
 }
 

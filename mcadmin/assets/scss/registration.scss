@@ -33,29 +33,19 @@ html, body, main {
   overflow: hidden;
 }
 
-.mc-card {
-  transition: height 1s;
-}
-
 .mc-card form {
   display: flex;
   justify-content: center;
   flex-direction: column;
-  align-items: center;
 }
 
-@media screen and (max-device-width: $sm-tablet-width-max) {
-  .mc-card .mc-input, .mc-card form small {
-    margin: 10px 0;
-  }
+.mc-card .mc-input {
+  margin: 10px 0;
 }
 
 .mc-card form h2 {
   margin-bottom: 50px;
-
-  @media screen and (max-device-width: $sm-tablet-width-max) {
-    font-size: 48pt;
-  }
+  align-self: center;
 }
 
 .mc-card form small {

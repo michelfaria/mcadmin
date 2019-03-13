@@ -1,5 +1,5 @@
 {# mcadmin/templates/registration.html #}
-{% extends "layout.html" %}
+{% extends "_layout.html" %}
 
 {% block title %}Registration{% endblock %}
 
@@ -11,140 +11,21 @@
 {% block content %}
     <div class="container">
         <div class="mc-card growing">
-            <form class="registration-form mc-fade-in" id="registration-form">
+            <form class="registration-form mc-fade-in"
+                  id="registration-form"
+                  method="post">
                 <h2>Register</h2>
+                {% from "_formhelpers.html" import render_field %}
 
-                <input type="password"
-                       id="password-input"
-                       name="password"
-                       class="mc-input"
-                       aria-describedby="password-help"
-                       placeholder="Enter password"
-                       pattern=".{8,255}"
-                       required
-                       data-value-missing="Please enter a password!"
-                       data-pattern-mismatch="Please ensure your password has at least 8 characters and at most 255!"
-                       data-error-msg-id="password-input-error"/>
-                <small id="password-help">This will be your password! Make sure it's strong!</small>
-
-                <input type="password"
-                       id="repeat-password-input"
-                       name="repeat_password"
-                       aria-describedby="password-help"
-                       class="mc-input"
-                       placeholder="Confirm password"
-                       required
-                       data-value-missing="Please repeat your password here!
-                        This will ensure that you typed your password correctly."
-                       data-passwords-mismatch="The password you typed here does not match the one you typed above.
-                        Please type your password again to ensure there were no mistakes."
-                       data-error-msg-id="repeat-password-input-error"
-                       data-custom-validation-1="validateRepeated;passwordsMismatch"/>
-                <small id="repeat-password-help">Type the same password as you did above.</small>
-
+                {{ render_field(form.password) }}
+                {{ render_field(form.confirm_password) }}
                 {{ form.csrf_token }}
+
+                <input type="submit" class="mc-grn-btn" value="Submit">
             </form>
         </div>
     </div>
 {% endblock %}
 
 {% block scripts %}
-
-    <script type="text/javascript" src="{{ url_for('static', filename='js/forms.js') }}"></script>
-
-    <!--suppress ES6ConvertVarToLetConst -->
-    <script type="text/javascript">
-        // #registration-form
-        var form;
-
-        var submitBtn;
-        (function createButton() {
-            var b = document.createElement("button");
-            b.className = "mc-grn-btn transition-in-from-right";
-            b.id = "submit-form-btn";
-            b.type = "submit";
-            b.textContent = "Submit";
-            submitBtn = b;
-        })();
-
-        window.onload = function () {
-            form = document.getElementById("registration-form");
-            FormsJs.register(form, onInputInvalid, onInputValid);
-        };
-
-        /**
-         * @param {HTMLInputElement} el
-         */
-        function onInputValid(el) {
-            console.log('Valid: ' + el);
-            removeValidationErrorMessageIfExists(el);
-        }
-
-        /**
-         * @param {HTMLInputElement} el
-         */
-        function onInputInvalid(el) {
-
-            function createErrorMessageList() {
-                var ul = document.createElement('ul');
-                var errorMsgs = el.dataset.validityMessages.split(FormsJs.ERRMSG_SEPARATOR);
-                for (var errMsg of errorMsgs) {
-                    var li = document.createElement('li');
-                    li.innerText = errMsg;
-                    ul.appendChild(li);
-                }
-                return ul;
-            }
-
-            function createValidationErrorDiv(errorMessageList) {
-                var errDiv = document.createElement('div');
-                errDiv.id = el.dataset.errorMsgId;
-                errDiv.classList.add('mc-input-error');
-                errDiv.appendChild(errorMessageList);
-                return errDiv;
-            }
-
-            console.log('Invalid: ' + el);
-
-            if (!hasErrorMessageIdData(el, true)) {
-                return;
-            }
-
-            removeValidationErrorMessageIfExists(el);
-
-            var errorMessageList = createErrorMessageList();
-            var validationErrorsDiv = createValidationErrorDiv(errorMessageList);
-
-            // add div as sibling to the input field
-            el.parentNode.insertBefore(validationErrorsDiv, el);
-        }
-
-        /**
-         * Returns true if the specified element has data-error-msg-id set.
-         * @param el
-         * @param complain If set to true, the function will print a warning to the console if the data is not found
-         *                 to exist.
-         * @returns {boolean}
-         */
-        function hasErrorMessageIdData(el, complain) {
-            if (!el.dataset.errorMsgId) {
-                if (complain) {
-                    console.error('warning: missing error-msg-id in ' + el);
-                }
-                return false;
-            }
-            return true;
-        }
-
-        function removeValidationErrorMessageIfExists(el) {
-            if (!hasErrorMessageIdData(el, true)) {
-                return;
-            }
-
-            var errDiv = document.getElementById(el.dataset.errorMsgId);
-            if (errDiv) {
-                errDiv.parentNode.removeChild(errDiv);
-            }
-        }
-    </script>
 {% endblock %}
