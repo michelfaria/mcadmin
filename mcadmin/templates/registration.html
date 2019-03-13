@@ -23,7 +23,8 @@
                        pattern=".{8,255}"
                        required
                        data-value-missing="Please enter a password!"
-                       data-pattern-mismatch="Please ensure your password has at least 8 characters and at most 255!"/>
+                       data-pattern-mismatch="Please ensure your password has at least 8 characters and at most 255!"
+                       data-error-msg-id="password-input-error"/>
                 <small id="password-help">This will be your password! Make sure it's strong!</small>
 
                 <input type="password"
@@ -36,7 +37,9 @@
                        data-value-missing="Please repeat your password here!
                         This will ensure that you typed your password correctly."
                        data-passwords-mismatch="The password you typed here does not match the one you typed above.
-                        Please type your password again to ensure there were no mistakes."/>
+                        Please type your password again to ensure there were no mistakes."
+                       data-error-msg-id="repeat-password-input-error"
+                       data-custom-validation-1="validateRepeated;passwordsMismatch"/>
                 <small id="repeat-password-help">Type the same password as you did above.</small>
 
                 {{ form.csrf_token }}
@@ -49,6 +52,7 @@
 
     <script type="text/javascript" src="{{ url_for('static', filename='js/forms.js') }}"></script>
 
+    <!--suppress ES6ConvertVarToLetConst -->
     <script type="text/javascript">
         // #registration-form
         var form;
@@ -73,13 +77,74 @@
          */
         function onInputValid(el) {
             console.log('Valid: ' + el);
+            removeValidationErrorMessageIfExists(el);
         }
 
         /**
          * @param {HTMLInputElement} el
          */
         function onInputInvalid(el) {
+
+            function createErrorMessageList() {
+                var ul = document.createElement('ul');
+                var errorMsgs = el.dataset.validityMessages.split(FormsJs.ERRMSG_SEPARATOR);
+                for (var errMsg of errorMsgs) {
+                    var li = document.createElement('li');
+                    li.innerText = errMsg;
+                    ul.appendChild(li);
+                }
+                return ul;
+            }
+
+            function createValidationErrorDiv(errorMessageList) {
+                var errDiv = document.createElement('div');
+                errDiv.id = el.dataset.errorMsgId;
+                errDiv.classList.add('mc-input-error');
+                errDiv.appendChild(errorMessageList);
+                return errDiv;
+            }
+
             console.log('Invalid: ' + el);
+
+            if (!hasErrorMessageIdData(el, true)) {
+                return;
+            }
+
+            removeValidationErrorMessageIfExists(el);
+
+            var errorMessageList = createErrorMessageList();
+            var validationErrorsDiv = createValidationErrorDiv(errorMessageList);
+
+            // add div as sibling to the input field
+            el.parentNode.insertBefore(validationErrorsDiv, el);
+        }
+
+        /**
+         * Returns true if the specified element has data-error-msg-id set.
+         * @param el
+         * @param complain If set to true, the function will print a warning to the console if the data is not found
+         *                 to exist.
+         * @returns {boolean}
+         */
+        function hasErrorMessageIdData(el, complain) {
+            if (!el.dataset.errorMsgId) {
+                if (complain) {
+                    console.error('warning: missing error-msg-id in ' + el);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        function removeValidationErrorMessageIfExists(el) {
+            if (!hasErrorMessageIdData(el, true)) {
+                return;
+            }
+
+            var errDiv = document.getElementById(el.dataset.errorMsgId);
+            if (errDiv) {
+                errDiv.parentNode.removeChild(errDiv);
+            }
         }
     </script>
 {% endblock %}

@@ -6,6 +6,7 @@ FormsJs.REGISTERED = 'formsjs-registered';
 FormsJs.VALID = 'formsjs-valid';
 FormsJs.INVALID = 'formsjs-invalid';
 FormsJs.DIRTY = 'formsjs-dirty';
+FormsJs.ERRMSG_SEPARATOR = ';';
 
 /**
  * @callback InputEventCallback
@@ -83,14 +84,13 @@ FormsJs._onInvalid = function (ev, cb) {
 
     var messages = [];
 
-    if (this.validity.valueMissing) {
-        messages.push(this.dataset.valueMissing);
-    }
-    if (this.validity.patternMismatch) {
-        messages.push(this.dataset.patternMismatch);
+    for (var prop in this.validity) {
+        if (this.validity[prop] === true) {
+            messages.push(this.dataset[prop]);
+        }
     }
 
-    this.dataset.validityMessages = messages.join(';');
+    this.dataset.validityMessages = messages.join(FormsJs.ERRMSG_SEPARATOR);
 
     if (cb) {
         cb(this);
