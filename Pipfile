@@ -13,6 +13,7 @@ flask-wtf = "*"
 wtforms = "*"
 flask-assets = "*"
 flask-scss = "*"
+flask-login = "*"
 
 [requires]
 python_version = "3.7"

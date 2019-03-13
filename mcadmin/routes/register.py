@@ -9,8 +9,7 @@ from mcadmin.forms.registration_form import RegistrationForm
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if is_registered():
-        abort(401)
-        return None
+        return abort(401)
     form = RegistrationForm()
     if form.validate_on_submit():
         password = request.form['password']

@@ -1,10 +1,10 @@
 # mcadmin/forms/registration_form.py
 
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import PasswordField, validators
 
 
-class RegistrationForm(Form):
+class RegistrationForm(FlaskForm):
     password = PasswordField(
         'Password',
         validators=[
