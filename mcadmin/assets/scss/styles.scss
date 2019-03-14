@@ -6,13 +6,13 @@
  */
 @import "values";
 
-// @formatter:off
-$mc-card-max-width = 600px;
-$mc-card-max-height = 600px;
-$mc-card-max-height-mobile = 98vw;
-// @formatter:on
-
 // [general]
+
+html, body, main {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
 
 @font-face {
   font-family: 'White Rabbit';
@@ -23,8 +23,18 @@ $mc-card-max-height-mobile = 98vw;
   font-family: "White Rabbit", sans-serif;
 
   @media screen and (max-device-width: $sm-tablet-width-max) {
-    font-size: xx-large;
+    font-size: larger;
   }
+}
+
+.container {
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
 }
 
 .hidden {
@@ -48,18 +58,8 @@ $mc-card-max-height-mobile = 98vw;
 }
 
 .mc-card {
-  padding: 50px;
-  max-width: $mc-card-max-width;
-  max-height: $mc-card-max-height;
-
-  overflow: hidden;
-
   background-color: rgba(255, 255, 255, 0.8);
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
-
-  @media screen and (max-device-width: $sm-tablet-width-max) {
-    max-height: $mc-card-max-height-mobile;
-  }
 }
 
 // [animations]
@@ -72,13 +72,13 @@ $mc-card-max-height-mobile = 98vw;
 
 @keyframes mc-card-grow {
   from {
-    max-width: 1vw;
+    max-width: 1%;
   }
   40% {
-    max-width: 1vw;
+    max-width: 1%;
   }
   to {
-    max-width: $mc-card-max-width;
+    max-width: 100%;
   }
 }
 

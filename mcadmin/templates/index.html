@@ -2,6 +2,17 @@
 
 {% extends "_layout.html" %}
 {% block title %}Index{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}"/>
+{% endblock %}
+
 {% block content %}
-    <h1>Index</h1>
+    <div class="container">
+        <div class="mc-card toolbar">
+
+        </div>
+    </div>
 {% endblock %}
