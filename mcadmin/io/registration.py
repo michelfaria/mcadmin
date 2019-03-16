@@ -10,7 +10,7 @@ def is_registered():
 
 
 def save_password(password):
-    with open(AUTH_FILE, 'w') as f:
+    with open(AUTH_FILE, 'w+') as f:
         f.write(password)
 
 

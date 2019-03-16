@@ -6,20 +6,18 @@
 {% block head %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/status_panel.css') }}"/>
 {% endblock %}
 
 {% block content %}
     <div class="container">
         <div class="mc-card toolbar">
-            <h2>Server Status</h2>
-            <h2>Server Console</h2>
-            <h2>Properties</h2>
-            <h2>Whitelist</h2>
-            <h2>Banned Players</h2>
+            {% from "_panelmacros.html" import toolbar %}
+            {{ toolbar() }}
         </div>
         <div class="mc-card status-card">
-            <h4>Server status</h4>
+            <p>Server status</p>
 
             <table class="status-table">
                 <caption class="hidden">Overview of Server Status</caption>

@@ -5,6 +5,7 @@
    [animations]
  */
 @import "values";
+@import "mixins";
 
 // [general]
 
@@ -28,17 +29,14 @@ html, body, main {
 }
 
 .container {
+  @include center-flex;
+
   height: 100%;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
   overflow: hidden;
 }
 
 .hidden {
-  visibility: hidden;
+  display: none;
 }
 
 .mc-grn-btn {

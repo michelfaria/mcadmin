@@ -14,6 +14,11 @@ wtforms = "*"
 flask-assets = "*"
 flask-scss = "*"
 flask-login = "*"
+lxml = "*"
+requests = "*"
+cssselect = "*"
+pprint = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.7"

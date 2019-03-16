@@ -1,0 +1,19 @@
+{# mcadmin/templates/_panelmacros.html #}
+
+{% macro toolbar_entry(icon, label) %}
+    <div class="toolbar-entry">
+        <div class="toolbar-icon-box">
+            <img class="toolbar-entry-icon"
+                 src="{{ url_for('static', filename=icon) }}" alt="Icon">
+        </div>
+        <h3 class="toolbar-entry-label">{{ label }}</h3>
+    </div>
+{% endmacro %}
+
+{% macro toolbar() %}
+    {{ toolbar_entry("img/icons/lamp.png", "Server Status") }}
+    {{ toolbar_entry("img/icons/command_line.png", "Console") }}
+    {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration") }}
+    {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
+    {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
+{% endmacro %}

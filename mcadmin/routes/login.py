@@ -1,16 +1,19 @@
 # mcadmin/routes/login.py
 
-from flask import render_template, flash, redirect, request
+from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user
 
 from mcadmin.forms.login_form import LoginForm
-from mcadmin.io.registration import password_matches
+from mcadmin.io.registration import password_matches, is_registered
 from mcadmin.model.user import User
 from mcadmin.server import app
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if not is_registered():
+        return redirect(url_for('register'))
+
     form = LoginForm()
     user = User(1)
 
