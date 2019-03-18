@@ -1,7 +1,7 @@
 # mcadmin/routes/register.py
 
 from flask import request, abort, render_template, redirect
-from mcadmin.server import app
+from mcadmin.main import app
 from mcadmin.io.registration import is_registered, save_password
 from mcadmin.forms.registration_form import RegistrationForm
 

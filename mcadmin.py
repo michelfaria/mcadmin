@@ -1,5 +1,5 @@
 # mcadmin.py
 
-from mcadmin import server
+from mcadmin import main
 
-server.start()
+main.start()

@@ -4,7 +4,7 @@ from flask import render_template, redirect, url_for
 from flask_login import current_user
 
 from mcadmin.io.registration import is_registered
-from mcadmin.server import app, login_manager
+from mcadmin.main import app, login_manager
 
 
 @app.route('/')

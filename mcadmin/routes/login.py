@@ -6,7 +6,7 @@ from flask_login import login_user
 from mcadmin.forms.login_form import LoginForm
 from mcadmin.io.registration import password_matches, is_registered
 from mcadmin.model.user import User
-from mcadmin.server import app
+from mcadmin.main import app
 
 
 @app.route('/login', methods=['GET', 'POST'])
