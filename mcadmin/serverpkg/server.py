@@ -1,18 +1,30 @@
+import atexit
 import glob
 import os
-import time
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 
 import requests
+import logging
 
 from mcadmin.serverpkg import jarentries
 
+LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'
 MAX_DOWNLOAD_ATTEMPTS = 2
+proc = None
 
 # create server dir if it does not exist
 if not os.path.exists(SERVER_DIR):
     os.mkdir(SERVER_DIR)
+
+
+def _on_program_exit():
+    LOGGER.info('Python is exiting: killing server process')
+    proc.kill()
+    LOGGER.info('Server process (%d) killed' % proc.pid)
+
+
+atexit.register(_on_program_exit)
 
 
 class TooManyMatchesError(Exception):
@@ -35,11 +47,11 @@ def _locate_server_file_name():
 def _download_latest_server():
     version, full_name, link = jarentries.latest_stable_ver()
 
-    print('Downloading server from %s ...' % link)
+    LOGGER.info('Downloading server from %s ...' % link)
     response = requests.get(link)
     write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
 
-    print('Downloaded. Writing to %s ...' % write_to)
+    LOGGER.info('Downloaded. Writing to %s ...' % write_to)
     with open(write_to, 'wb') as f:
         f.write(response.content)
     return full_name
@@ -72,13 +84,13 @@ def start(server_jar_name=None, jvm_params=''):
                 success = True
                 break
             except FileNotFoundError:
-                print('No server file found; will attempt to download latest server file')
+                LOGGER.warning('No server file found; will attempt to download latest server file')
                 try:
                     server_jar_name = _download_latest_server()
                     success = True
                     break
                 except IOError as ex:
-                    print('Download failed: ' + ex)
+                    LOGGER.error('Download failed: ' + ex)
         if not success:
             raise IOError('Server start failed: Could not download latest server jar')
     assert server_jar_name
@@ -87,13 +99,14 @@ def start(server_jar_name=None, jvm_params=''):
     _agree_eula()
 
     command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
+    global proc
     proc = Popen(command, stdout=PIPE, cwd=SERVER_DIR)
 
-    while True:
-        line = proc.stdout.readline()
-        if len(line) > 0:
-            print(line)
+
+def is_server_running():
+    return proc is not None
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     start()

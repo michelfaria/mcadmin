@@ -2,7 +2,7 @@
 
 import os.path
 
-from flask import Flask, redirect, url_for, request
+from flask import Flask
 from flask_login import LoginManager
 from flask_scss import Scss
 
