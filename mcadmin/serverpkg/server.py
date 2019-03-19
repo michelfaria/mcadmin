@@ -1,7 +1,10 @@
+import threading
 import atexit
 import glob
 import logging
 import os
+import signal
+import time
 from subprocess import Popen, PIPE
 
 import requests
@@ -11,21 +14,13 @@ from mcadmin.serverpkg import jarentries
 LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'
 MAX_DOWNLOAD_ATTEMPTS = 2
-proc = None
+SIGTERM_WAIT_SECONDS = 30
+
+proc = None  # type: Popen
 
 # create server dir if it does not exist
 if not os.path.exists(SERVER_DIR):
     os.mkdir(SERVER_DIR)
-
-
-def _on_program_exit():
-    LOGGER.info('Python is exiting: killing server process')
-    if proc is not None:
-        proc.kill()
-    LOGGER.info('Server process (%d) killed' % proc.pid)
-
-
-atexit.register(_on_program_exit)
 
 
 class TooManyMatchesError(Exception):
@@ -33,6 +28,44 @@ class TooManyMatchesError(Exception):
     For when a lookup returns more than one match when just one is expected.
     """
     pass
+
+
+def is_server_running():
+    return proc is not None and proc.poll() is None
+
+
+def stop():
+    global proc
+
+    if not is_server_running():
+        raise ValueError('Server is not running: no process reference')
+    return_code = proc.poll()
+    if return_code is not None:
+        raise ValueError('Server is not running: no return code')
+
+    LOGGER.info('Waiting at most %s seconds for server to shut down ...' % SIGTERM_WAIT_SECONDS)
+    proc.send_signal(signal.SIGTERM)
+    proc.wait(SIGTERM_WAIT_SECONDS)
+
+    return_code = proc.poll()
+    if return_code is None:
+        LOGGER.warning('Server SIGTERM timed out; terminating forcefully')
+        proc.terminate()
+        proc = None
+        return -1
+    else:
+        LOGGER.info('Server process closed')
+        proc = None
+        return return_code
+
+
+def _on_program_exit():
+    if is_server_running():
+        LOGGER.info('Python is exiting: terminating server process')
+        stop()
+
+
+atexit.register(_on_program_exit)
 
 
 def _locate_server_file_name():
@@ -76,6 +109,8 @@ def _agree_eula():
 
 
 def start(server_jar_name=None, jvm_params=''):
+    global proc
+
     # if a server jar name was specified,
     # it will be used instead of the latest version
     if server_jar_name:
@@ -96,14 +131,23 @@ def start(server_jar_name=None, jvm_params=''):
     _agree_eula()
 
     command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
-    global proc
-    proc = Popen(command, stdout=PIPE, cwd=SERVER_DIR)
+    proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
+    def worker():
+        while is_server_running():
+            line = proc.stdout.readline()
+            if len(line) > 0:
+                print(line)
 
-def is_server_running():
-    return proc is not None
+    stdout_t = threading.Thread(target=worker)
+    stdout_t.start()
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     start()
+    print('sleep')
+    time.sleep(30)
+    print('end sleep')
+    stop()
+    assert proc is None

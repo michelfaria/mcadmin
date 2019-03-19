@@ -1,7 +1,9 @@
 .idea/
 .vscode/
+__pycache__/
 
 credentials.bfe
 server_files/
+server_list.yml
 
 /mcadmin/static/css/*.css
