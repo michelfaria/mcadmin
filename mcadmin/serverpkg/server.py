@@ -1,10 +1,10 @@
 import atexit
 import glob
+import logging
 import os
 from subprocess import Popen, PIPE
 
 import requests
-import logging
 
 from mcadmin.serverpkg import jarentries
 
@@ -20,7 +20,8 @@ if not os.path.exists(SERVER_DIR):
 
 def _on_program_exit():
     LOGGER.info('Python is exiting: killing server process')
-    proc.kill()
+    if proc is not None:
+        proc.kill()
     LOGGER.info('Server process (%d) killed' % proc.pid)
 
 
@@ -47,14 +48,21 @@ def _locate_server_file_name():
 def _download_latest_server():
     version, full_name, link = jarentries.latest_stable_ver()
 
-    LOGGER.info('Downloading server from %s ...' % link)
-    response = requests.get(link)
-    write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
+    for attempt in range(MAX_DOWNLOAD_ATTEMPTS):
+        LOGGER.info('Downloading server from %s ...' % link)
+        try:
+            response = requests.get(link)
+            write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
 
-    LOGGER.info('Downloaded. Writing to %s ...' % write_to)
-    with open(write_to, 'wb') as f:
-        f.write(response.content)
-    return full_name
+            LOGGER.info('Downloaded. Writing to %s ...' % write_to)
+            with open(write_to, 'wb') as f:
+                f.write(response.content)
+            return full_name
+        except IOError as e:
+            LOGGER.error('Could not download server: [%s] %s' % (
+                str(e), '... Retrying' if attempt + 1 < MAX_DOWNLOAD_ATTEMPTS else ''))
+
+    raise IOError('Failed to download server after %s attempts' % MAX_DOWNLOAD_ATTEMPTS)
 
 
 def _agree_eula():
@@ -77,22 +85,11 @@ def start(server_jar_name=None, jvm_params=''):
     else:
         # server file not specified
         # download latest stable version
-        success = False
-        for _ in range(MAX_DOWNLOAD_ATTEMPTS):
-            try:
-                server_jar_name = _locate_server_file_name()
-                success = True
-                break
-            except FileNotFoundError:
-                LOGGER.warning('No server file found; will attempt to download latest server file')
-                try:
-                    server_jar_name = _download_latest_server()
-                    success = True
-                    break
-                except IOError as ex:
-                    LOGGER.error('Download failed: ' + ex)
-        if not success:
-            raise IOError('Server start failed: Could not download latest server jar')
+        try:
+            server_jar_name = _locate_server_file_name()
+        except FileNotFoundError:
+            LOGGER.warning('No server file found; will attempt to download latest server file')
+            server_jar_name = _download_latest_server()
     assert server_jar_name
 
     # eula has to be agreed to otherwise server won't start
