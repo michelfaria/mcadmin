@@ -9,7 +9,7 @@ from subprocess import Popen, PIPE
 
 import requests
 
-from mcadmin.serverpkg import jarentries
+from mcadmin.server import jarentries
 
 LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'
