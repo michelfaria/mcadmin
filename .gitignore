@@ -2,5 +2,6 @@
 .vscode/
 
 credentials.bfe
+server_files/
 
 /mcadmin/static/css/*.css
