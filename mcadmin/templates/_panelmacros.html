@@ -1,4 +1,19 @@
-{# mcadmin/templates/_panelmacros.html #}
+{# mcadmin/templates/_panel_page.html #}
+{% extends "_layout.html" %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="container">
+        <div class="mc-card toolbar">
+            {{ toolbar() }}
+        </div>
+    </div>
+{% endblock %}
 
 {% macro toolbar_entry(icon, label) %}
     <div class="toolbar-entry">
