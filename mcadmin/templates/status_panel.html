@@ -1,21 +1,22 @@
-{# mcadmin/templates/index.html #}
+{# mcadmin/templates/status_panel.html #}
 
 {% extends "_layout.html" %}
-{% block title %}Index{% endblock %}
+{% from "_panelmacros.html" import toolbar %}
+
+
+{% block title %}Status{% endblock %}
+
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/status_panel.css') }}"/>
 {% endblock %}
 
+
 {% block content %}
     <div class="container">
-        <div class="mc-card toolbar">
-            {% from "_panelmacros.html" import toolbar %}
-            {{ toolbar() }}
-        </div>
+        {{ toolbar() }}
         <div class="mc-card status-card">
             <p>Server status</p>
 

@@ -1,0 +1,25 @@
+{# mcadmin/templates/console_panel.html #}
+
+{% extends "_layout.html" %}
+{% from "_panelmacros.html" import toolbar %}
+
+{% block title %}Console{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {{ toolbar() }}
+        <div class="mc-card">
+            <p>TEST</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+{% endblock %}

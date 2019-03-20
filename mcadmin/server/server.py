@@ -1,3 +1,5 @@
+# mcadmin/server/server.py
+
 import threading
 import atexit
 import glob
@@ -5,6 +7,7 @@ import logging
 import os
 import signal
 import time
+import collections
 from subprocess import Popen, PIPE
 
 import requests
@@ -15,8 +18,16 @@ LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'
 MAX_DOWNLOAD_ATTEMPTS = 2
 SIGTERM_WAIT_SECONDS = 30
+CONSOLE_OUTPUT_MAX_LINES = 100
 
+# console output buffer that will be sent to the client when they open the console page.
+console_output = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
+
+# java server process handle
 proc = None  # type: Popen
+
+# thread that updates console_output with new lines
+console_thread = None  # type: threading.Thread
 
 # create server dir if it does not exist
 if not os.path.exists(SERVER_DIR):
@@ -36,6 +47,7 @@ def is_server_running():
 
 def stop():
     global proc
+    global console_thread
 
     if not is_server_running():
         raise ValueError('Server is not running: no process reference')
@@ -47,16 +59,19 @@ def stop():
     proc.send_signal(signal.SIGTERM)
     proc.wait(SIGTERM_WAIT_SECONDS)
 
+    assert not console_thread.is_alive()
+
     return_code = proc.poll()
+
     if return_code is None:
         LOGGER.warning('Server SIGTERM timed out; terminating forcefully')
         proc.terminate()
-        proc = None
-        return -1
     else:
         LOGGER.info('Server process closed')
-        proc = None
-        return return_code
+
+    proc = None
+    console_thread = None
+    return return_code
 
 
 def _on_program_exit():
@@ -133,14 +148,43 @@ def start(server_jar_name=None, jvm_params=''):
     command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
     proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
-    def worker():
-        while is_server_running():
-            line = proc.stdout.readline()
-            if len(line) > 0:
-                print(line)
+    _start_console_thread()
 
-    stdout_t = threading.Thread(target=worker)
-    stdout_t.start()
+
+def _start_console_thread():
+    global console_thread
+
+    if console_thread is not None:
+        raise ValueError('Thread already exists')
+
+    console_thread = threading.Thread(target=_console_worker)
+    console_thread.start()
+
+
+def _console_worker():
+    while is_server_running():
+        assert proc is not None and proc.poll() is None
+        line = proc.stdout.readlines()
+        if len(line) > 0:
+            console_output.append(line)
+
+
+def input_line(text):
+    _require_server()
+    proc.stdin.write(text)
+
+
+def input_lines(lines):
+    _require_server()
+    proc.stdin.writelines(lines)
+
+
+def _require_server():
+    """
+    Raises a ValueError if the server is not running
+    """
+    if not is_server_running():
+        raise ValueError('Server needs to be running to do this')
 
 
 if __name__ == '__main__':
@@ -150,4 +194,7 @@ if __name__ == '__main__':
     time.sleep(30)
     print('end sleep')
     stop()
+    import shutil
+    shutil.rmtree(SERVER_DIR)
+    os.remove(jarentries.filename)
     assert proc is None

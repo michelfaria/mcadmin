@@ -11,7 +11,7 @@ from mcadmin.main import app, login_manager
 def index():
     if is_registered():
         if current_user.is_authenticated:
-            return render_template('index.html')
+            return render_template('status_panel.html')
         else:
             return login_manager.unauthorized()
     else:

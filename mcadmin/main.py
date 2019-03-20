@@ -12,16 +12,12 @@ from mcadmin.model.user import User
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(32)
 
-# set up login manager
-login_manager = LoginManager()
-login_manager.init_app(app)
-
-# enable SCSS support
+login_manager = LoginManager(app)
 Scss(app)
 
 # register routes
 # noinspection PyUnresolvedReferences
-from mcadmin.routes import index, register, login
+from mcadmin.routes import index, register, login, console_panel, logout
 
 login_manager.login_view = '/login'
 login_manager.login_message = 'Please log in'
@@ -33,4 +29,4 @@ def load_user(user_id):
 
 
 def start():
-    app.run()
+    app.run(threaded=True)

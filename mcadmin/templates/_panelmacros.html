@@ -1,34 +1,22 @@
-{# mcadmin/templates/_panel_page.html #}
-{% extends "_layout.html" %}
+{# mcadmin/templates/_panelmacros.html #}
 
-{% block head %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
-{% endblock %}
-
-{% block content %}
-    {{ super() }}
-    <div class="container">
-        <div class="mc-card toolbar">
-            {{ toolbar() }}
+{% macro toolbar_entry(icon, label, addr) %}
+    <a href="{{ addr if addr else '#' }}">
+        <div class="toolbar-entry">
+            <div class="toolbar-icon-box">
+                <img class="toolbar-entry-icon" src="{{ url_for('static', filename=icon) }}" alt="Icon">
+            </div>
+            <h3 class="toolbar-entry-label">{{ label }}</h3>
         </div>
-    </div>
-{% endblock %}
-
-{% macro toolbar_entry(icon, label) %}
-    <div class="toolbar-entry">
-        <div class="toolbar-icon-box">
-            <img class="toolbar-entry-icon"
-                 src="{{ url_for('static', filename=icon) }}" alt="Icon">
-        </div>
-        <h3 class="toolbar-entry-label">{{ label }}</h3>
-    </div>
+    </a>
 {% endmacro %}
 
 {% macro toolbar() %}
-    {{ toolbar_entry("img/icons/lamp.png", "Server Status") }}
-    {{ toolbar_entry("img/icons/command_line.png", "Console") }}
-    {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration") }}
-    {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
-    {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
+    <div class="mc-card toolbar">
+        {{ toolbar_entry("img/icons/lamp.png", "Server Status", '/') }}
+        {{ toolbar_entry("img/icons/command_line.png", "Console", '/console_panel') }}
+        {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration") }}
+        {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
+        {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
+    </div>
 {% endmacro %}

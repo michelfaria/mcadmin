@@ -1,3 +1,5 @@
+# mcadmin/server/jarentries.py
+
 import os
 import re
 from functools import wraps
