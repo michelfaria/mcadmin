@@ -1,24 +1,23 @@
+# mcadmin/server/server_repo.py
+
 import os
 import re
 from functools import wraps
 from pprint import pprint
 
+import logging
 import lxml.html
 import requests
 import yaml
 
+LOGGER = logging.getLogger(__name__)
 filename = 'server_list.yml'
 
 
-def _update_file_if_not_exists(f):
-    """
-    JarList functions decorated with this function will have their server
-    list updated if the list file is no present.
-    """
-
+def _update_repo_if_not_exists(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if not file_exists():
+        if not repo_exists():
             update()
         return f(*args, **kwargs)
 
@@ -26,30 +25,30 @@ def _update_file_if_not_exists(f):
 
 
 def update():
-    print('Downloading Minecraft server jars list')
+    LOGGER.info('Updating Minecraft server executable link repository...')
     page = requests.get('https://mcversions.net/')
-    print('Got Minecraft Servers list, length: %s' % len(page.text))
+    LOGGER.info('Got list, length: %s.' % len(page.text))
 
     tree = lxml.html.fromstring(page.text)
     d = {x.get('download'): x.get('href') for x in tree.cssselect('a.btn.server')}
 
-    print('Writing to ' + filename)
+    LOGGER.debug('Writing to ' + filename)
     with open(filename, 'w') as f:
         yaml.dump(d, f, default_flow_style=False)
-    print('Done downloading')
+    LOGGER.info('Server executable repository updated!')
 
 
-def file_exists():
+def repo_exists():
     return os.path.isfile(filename)
 
 
-@_update_file_if_not_exists
+@_update_repo_if_not_exists
 def load():
     with open(filename, 'r') as f:
         return yaml.safe_load(f)
 
 
-@_update_file_if_not_exists
+@_update_repo_if_not_exists
 def versions():
     stable = []
     snapshot = []
@@ -60,7 +59,10 @@ def versions():
         else:
             snapshot.append((version, full_name, link))
 
+    # Sort the list of stable versions in descending order
+    # lambda x :: x => tuple(version, full_name, link) :: x -> [int]
     stable.sort(key=lambda x: [int(y) for y in x[0].split('.')], reverse=True)
+
     return {
         'stable': stable,
         'snapshot': snapshot

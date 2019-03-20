@@ -1,3 +1,5 @@
+# mcadmin/server/server.py
+
 import threading
 import atexit
 import glob
@@ -9,7 +11,7 @@ from subprocess import Popen, PIPE
 
 import requests
 
-from mcadmin.server import jarentries
+from mcadmin.server import server_repo
 
 LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'
@@ -38,30 +40,30 @@ def stop():
     global proc
 
     if not is_server_running():
-        raise ValueError('Server is not running: no process reference')
+        raise ValueError('Server is not running: no process reference.')
     return_code = proc.poll()
     if return_code is not None:
-        raise ValueError('Server is not running: no return code')
+        raise ValueError('Server is not running: no return code.')
 
-    LOGGER.info('Waiting at most %s seconds for server to shut down ...' % SIGTERM_WAIT_SECONDS)
+    LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
     proc.send_signal(signal.SIGTERM)
     proc.wait(SIGTERM_WAIT_SECONDS)
 
     return_code = proc.poll()
     if return_code is None:
-        LOGGER.warning('Server SIGTERM timed out; terminating forcefully')
+        LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
         proc.terminate()
         proc = None
         return -1
     else:
-        LOGGER.info('Server process closed')
+        LOGGER.info('Server process closed.')
         proc = None
         return return_code
 
 
 def _on_program_exit():
     if is_server_running():
-        LOGGER.info('Python is exiting: terminating server process')
+        LOGGER.info('Python is exiting: terminating server process.')
         stop()
 
 
@@ -74,28 +76,28 @@ def _locate_server_file_name():
         raise FileNotFoundError(
             'Did not find a server file in directory %s/ (abspath: %s)' % (SERVER_DIR, os.path.abspath(SERVER_DIR)))
     if len(matches) > 1:
-        raise TooManyMatchesError('Found more than one server file in %s: %s' % (SERVER_DIR, str(matches)))
+        raise TooManyMatchesError('Found more than one server executable in %s: %s' % (SERVER_DIR, str(matches)))
     return os.path.basename(matches[0])
 
 
-def _download_latest_server():
-    version, full_name, link = jarentries.latest_stable_ver()
+def _download_latest_vanilla_server():
+    version, full_name, link = server_repo.latest_stable_ver()
 
     for attempt in range(MAX_DOWNLOAD_ATTEMPTS):
-        LOGGER.info('Downloading server from %s ...' % link)
+        LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
         try:
             response = requests.get(link)
             write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
 
-            LOGGER.info('Downloaded. Writing to %s ...' % write_to)
+            LOGGER.info('Done. Writing to %s ...' % write_to)
             with open(write_to, 'wb') as f:
                 f.write(response.content)
             return full_name
         except IOError as e:
-            LOGGER.error('Could not download server: [%s] %s' % (
+            LOGGER.error('Could not download server executable. Error: [%s] %s' % (
                 str(e), '... Retrying' if attempt + 1 < MAX_DOWNLOAD_ATTEMPTS else ''))
 
-    raise IOError('Failed to download server after %s attempts' % MAX_DOWNLOAD_ATTEMPTS)
+    raise IOError('Failed to download server executable after %s attempts.' % MAX_DOWNLOAD_ATTEMPTS)
 
 
 def _agree_eula():
@@ -123,8 +125,8 @@ def start(server_jar_name=None, jvm_params=''):
         try:
             server_jar_name = _locate_server_file_name()
         except FileNotFoundError:
-            LOGGER.warning('No server file found; will attempt to download latest server file')
-            server_jar_name = _download_latest_server()
+            LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
+            server_jar_name = _download_latest_vanilla_server()
     assert server_jar_name
 
     # eula has to be agreed to otherwise server won't start
