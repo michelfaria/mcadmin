@@ -2,9 +2,6 @@
 
 @import "mixins";
 
-.container {
-  flex-direction: column;
-}
 
 .mc-card {
   margin: 10px;
@@ -38,6 +35,10 @@
   min-height: 32px;
   max-width: 32px;
   max-height: 32px;
+}
+
+main {
+  flex-direction: column;
 }
 
 main:before {
