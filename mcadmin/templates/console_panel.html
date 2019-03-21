@@ -7,19 +7,31 @@
 
 {% block head %}
     {{ super() }}
+    <!--suppress ES6ConvertVarToLetConst -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        {{ toolbar() }}
-        <div class="mc-card">
-            <p>TEST</p>
+    {{ toolbar() }}
+    <div class="mc-card">
+        <div id="console-box">
+
         </div>
     </div>
 {% endblock %}
 
 {% block scripts %}
     {{ super() }}
+    <script type="text/javascript">
+        window.addEventListener('load', function () {
+            var eventSource = new EventSource('/console_panel_stream');
+
+            console.log('eventSource=' + JSON.stringify(eventSource));
+
+            eventSource.onmessage = function (event) {
+                console.log('EventSource: ' + JSON.stringify(event));
+            };
+        });
+    </script>
 {% endblock %}

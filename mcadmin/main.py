@@ -1,5 +1,5 @@
 # mcadmin/server.py
-
+import logging
 import os.path
 
 from flask import Flask
@@ -29,4 +29,5 @@ def load_user(user_id):
 
 
 def start():
+    logging.basicConfig(level=logging.DEBUG)
     app.run(threaded=True)

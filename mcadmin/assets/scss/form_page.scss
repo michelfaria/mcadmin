@@ -9,7 +9,7 @@ html, body, main {
   overflow: hidden;
 }
 
-.container:before {
+main:before {
   content: "";
 
   position: fixed;

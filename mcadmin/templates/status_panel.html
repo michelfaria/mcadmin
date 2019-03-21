@@ -15,34 +15,32 @@
 
 
 {% block content %}
-    <div class="container">
-        {{ toolbar() }}
-        <div class="mc-card status-card">
-            <p>Server status</p>
+    {{ toolbar() }}
+    <div class="mc-card status-card">
+        <p>Server status</p>
 
-            <table class="status-table">
-                <caption class="hidden">Overview of Server Status</caption>
-                <thead class="hidden">
-                <tr>
-                    <th>Field</th>
-                    <th>Value</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>Server Status</td>
-                    <td>--placeholder--</td>
-                </tr>
-                <tr>
-                    <td>Uptime</td>
-                    <td>--placeholder--</td>
-                </tr>
-                <tr>
-                    <td>Peak Activity</td>
-                    <td>--placeholder--</td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+        <table class="status-table">
+            <caption class="hidden">Overview of Server Status</caption>
+            <thead class="hidden">
+            <tr>
+                <th>Field</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Server Status</td>
+                <td>--placeholder--</td>
+            </tr>
+            <tr>
+                <td>Uptime</td>
+                <td>--placeholder--</td>
+            </tr>
+            <tr>
+                <td>Peak Activity</td>
+                <td>--placeholder--</td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 {% endblock %}

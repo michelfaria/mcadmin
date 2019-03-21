@@ -20,16 +20,16 @@ MAX_DOWNLOAD_ATTEMPTS = 2
 SIGTERM_WAIT_SECONDS = 30
 CONSOLE_OUTPUT_MAX_LINES = 100
 
-# console output buffer that will be sent to the client when they open the console page.
+# Console output buffer that will be sent to the client when they open the console page
 console_output = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
 
-# java server process handle
+# Java server process handle
 proc = None  # type: Popen
 
-# thread that updates console_output with new lines
+# Thread that updates console_output deque with new lines
 console_thread = None  # type: threading.Thread
 
-# create server dir if it does not exist
+# Create server files directory if it does not exist.
 if not os.path.exists(SERVER_DIR):
     os.mkdir(SERVER_DIR)
 
@@ -59,18 +59,20 @@ def stop():
     proc.send_signal(signal.SIGTERM)
     proc.wait(SIGTERM_WAIT_SECONDS)
 
-    assert not console_thread.is_alive()
-
     return_code = proc.poll()
 
     if return_code is None:
         LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
         proc.terminate()
-    else:
-        proc = None
-        console_thread = None
-        LOGGER.info('Server process closed.')
-        return return_code
+
+    LOGGER.info('Server process closed.')
+
+    # The console thread should not be alive anymore,
+    # because the process is closed.
+    assert not console_thread.is_alive()
+
+    proc = None
+    console_thread = None
 
 
 def _on_program_exit():
@@ -193,8 +195,10 @@ if __name__ == '__main__':
     time.sleep(30)
     print('end sleep')
     stop()
+
     import shutil
 
     shutil.rmtree(SERVER_DIR)
-    os.remove(server_repo.filename)
+    os.remove(server_repo.FILENAME)
+
     assert proc is None

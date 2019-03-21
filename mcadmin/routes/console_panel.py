@@ -1,9 +1,13 @@
 # mcadmin/routes/console_panel.py
+import logging
+
 from flask import render_template, Response
 from flask_login import login_required
-from mcadmin.server.server import proc, is_server_running
 
 from mcadmin.main import app
+from mcadmin.server.server import proc, is_server_running
+
+LOGGER = logging.getLogger(__name__)
 
 
 @app.route('/console_panel')
@@ -19,9 +23,16 @@ def stream():
 
 
 def console_stream():
-    while is_server_running():
-        assert proc is not None and proc.poll() is None
-        out = proc.stdout.readlines()
-        if len(out) > 0:
-            yield out
-    return 'Server stream closed'
+    while True:
+        yield('Foo')
+    # try:
+    #     while True:
+    #         if not is_server_running():
+    #             yield 'Server is not running'
+    #             continue
+    #         assert proc is not None and proc.poll() is None
+    #         out = proc.stdout.readlines()
+    #         if len(out) > 0:
+    #             yield out
+    # except GeneratorExit as e:
+    #     LOGGER.debug('console_stream GeneratorExit: ' + str(e))

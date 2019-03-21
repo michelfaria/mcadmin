@@ -12,27 +12,25 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container">
-        <div class="mc-card form-card growing">
-            <form class="mc-fade-in" method="post">
-                <h2>Login</h2>
+    <div class="mc-card form-card growing">
+        <form class="mc-fade-in" method="post">
+            <h2>Login</h2>
 
-                {% with messages = get_flashed_messages() %}
-                    {% if messages %}
-                        <ul>
-                            {% for message in messages %}
-                                <li>{{ message }}</li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                {% endwith %}
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
 
-                {% from "_formhelpers.html" import render_field %}
-                {{ render_field(form.password) }}
-                {{ form.csrf_token }}
+            {% from "_formhelpers.html" import render_field %}
+            {{ render_field(form.password) }}
+            {{ form.csrf_token }}
 
-                <button class="mc-grn-btn" type="submit">Log in</button>
-            </form>
-        </div>
+            <button class="mc-grn-btn" type="submit">Log in</button>
+        </form>
     </div>
 {% endblock %}

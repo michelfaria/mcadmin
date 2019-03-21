@@ -15,6 +15,13 @@ html, body, main {
   margin: 0;
 }
 
+main {
+  @include center-flex;
+
+  height: 100%;
+  overflow: hidden;
+}
+
 @font-face {
   font-family: 'White Rabbit';
   src: local('White Rabbit'), url("/static/fonts/WhiteRabbit.otf") format("opentype");
@@ -26,13 +33,6 @@ html, body, main {
   @media screen and (max-device-width: $sm-tablet-width-max) {
     font-size: larger;
   }
-}
-
-.container {
-  @include center-flex;
-
-  height: 100%;
-  overflow: hidden;
 }
 
 .hidden {

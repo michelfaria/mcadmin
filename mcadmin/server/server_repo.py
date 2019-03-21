@@ -11,7 +11,7 @@ import requests
 import yaml
 
 LOGGER = logging.getLogger(__name__)
-filename = 'server_list.yml'
+FILENAME = 'server_list.yml'
 
 
 def _update_repo_if_not_exists(f):
@@ -32,19 +32,19 @@ def update():
     tree = lxml.html.fromstring(page.text)
     d = {x.get('download'): x.get('href') for x in tree.cssselect('a.btn.server')}
 
-    LOGGER.debug('Writing to ' + filename)
-    with open(filename, 'w') as f:
+    LOGGER.debug('Writing to ' + FILENAME)
+    with open(FILENAME, 'w') as f:
         yaml.dump(d, f, default_flow_style=False)
     LOGGER.info('Server executable repository updated!')
 
 
 def repo_exists():
-    return os.path.isfile(filename)
+    return os.path.isfile(FILENAME)
 
 
 @_update_repo_if_not_exists
 def load():
-    with open(filename, 'r') as f:
+    with open(FILENAME, 'r') as f:
         return yaml.safe_load(f)
 
 
