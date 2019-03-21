@@ -26,8 +26,3 @@ login_manager.login_message = 'Please log in'
 @login_manager.user_loader
 def load_user(user_id):
     return User.get(user_id)
-
-
-def start():
-    logging.basicConfig(level=logging.DEBUG)
-    app.run(threaded=True)

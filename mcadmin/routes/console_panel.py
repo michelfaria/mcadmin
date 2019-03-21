@@ -20,26 +20,25 @@ def console_panel():
 
 @app.route('/console_panel_stream')
 @login_required
-def stream():
-    return Response(console_stream(), mimetype='text/event-stream')
+def console_panel_stream():
+    def generator():
+        try:
+            while True:
+                if not is_server_running():
+                    yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
+                    time.sleep(10)  # Wait a little before checking again
+                    continue
 
+                assert proc is not None and proc.poll() is None
 
-def console_stream():
-    try:
-        while True:
-            if not is_server_running():
-                yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
-                time.sleep(10)  # Wait a little before checking again
-                continue
+                out = proc.stdout.readline()
+                if len(out) > 0:
+                    yield 'data: ' + out + '\n\n'
+                else:
+                    # Wait a little to prevent a lot of CPU usage
+                    time.sleep(1)
+        except GeneratorExit as e:
+            # Client quit console page
+            LOGGER.debug('GeneratorExit console_panel_stream: ' + str(e))
 
-            assert proc is not None and proc.poll() is None
-
-            out = proc.stdout.readline()
-            if len(out) > 0:
-                yield 'data: ' + out + '\n\n'
-            else:
-                # Wait a little to prevent a lot of CPU usage
-                time.sleep(1)
-    except GeneratorExit as e:
-        # Client quit console page
-        LOGGER.debug('console_stream GeneratorExit: ' + str(e))
+    return Response(generator(), mimetype='text/event-stream')

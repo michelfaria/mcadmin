@@ -15,17 +15,7 @@
 {% block content %}
     {{ toolbar() }}
     <div class="mc-card console-container">
-        <div class="console-box">
-            <span class="console-line">hi!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">Hello!</span>
-            <span class="console-line">oi!</span>
+        <div id="console-box" class="console-box">
         </div>
     </div>
 {% endblock %}
@@ -34,17 +24,37 @@
     {{ super() }}
     <script type="text/javascript">
         window.addEventListener('load', function () {
-            var eventSource = new EventSource('/console_panel_stream');
+            var consoleBox = document.getElementById('console-box');
+            var eventSource = new EventSource(MA_CONSTS.CONSOLE_PANEL_STREAM);
 
             eventSource.onerror = function () {
-                console.error('The EventSource was closed due to an error. This could mean that you lost connection' +
-                    ' to the console or that the server administration software was shut down.');
+                console.error(MA_CONSTS.EVENTSOURCE_DISCONNECT_MSG);
                 this.close();
             };
 
             eventSource.onmessage = function (msg) {
                 console.log('EventSource: ' + msg.data);
+
+                if (msg.data === MA_CONSTS.SERVER_SHUTDOWN_ERR_CODE) {
+                    consoleShutdown();
+                } else {
+                    addConsoleLine(msg.data);
+                }
             };
+
+            function consoleShutdown() {
+                addConsoleLine('Server is not running');
+            }
+
+            function addConsoleLine(text) {
+                var span = document.createElement('span');
+                span.classList.add('console-line');
+                span.innerText = text;
+
+                consoleBox.appendChild(span);
+
+                return span;
+            }
         });
     </script>
 {% endblock %}
