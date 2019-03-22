@@ -15,13 +15,12 @@ LOGGER = logging.getLogger(__name__)
 
 @app.route('/')
 def index():
-    if is_registered():
-        if current_user.is_authenticated:
-            return render_template('status_panel.html')
-        else:
-            return login_manager.unauthorized()
-    else:
+    if not is_registered():
         return redirect(url_for('register'))
+    elif not current_user.is_authenticated:
+        return login_manager.unauthorized()
+    else:
+        return redirect(url_for('status'))
 
 
 @app.route('/status_panel_stream')

@@ -41,6 +41,20 @@ class TooManyMatchesError(Exception):
     pass
 
 
+class ServerAlreadyRunningError(Exception):
+    """
+    Raised when trying to start the server when it is already running.
+    """
+    pass
+
+
+class ServerNotRunningError(Exception):
+    """
+    Raised when an action that requires a running server is performed without the server running.
+    """
+    pass
+
+
 def is_server_running():
     return proc is not None and proc.poll() is None
 
@@ -50,10 +64,10 @@ def stop():
     global console_thread
 
     if not is_server_running():
-        raise ValueError('Server is not running: no process reference.')
+        raise ServerNotRunningError('Server is not running: no process reference.')
     return_code = proc.poll()
     if return_code is not None:
-        raise ValueError('Server is not running: no return code.')
+        raise ServerNotRunningError('Server is not running: no return code.')
 
     LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
     proc.send_signal(signal.SIGTERM)
@@ -126,6 +140,9 @@ def _agree_eula():
 
 def start(server_jar_name=None, jvm_params=''):
     global proc
+
+    if is_server_running():
+        raise ServerAlreadyRunningError('Server is already running')
 
     # if a server jar name was specified,
     # it will be used instead of the latest version

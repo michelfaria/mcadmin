@@ -9,7 +9,6 @@
 
 {% block head %}
     {{ super() }}
-    <!--suppress ALL -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/status_panel.css') }}"/>
 {% endblock %}
@@ -31,20 +30,24 @@
             <tbody>
             <tr>
                 <td>Server Status</td>
-                <td>--placeholder--</td>
+                <td><span id="server-status">Unavailable</span></td>
             </tr>
             <tr>
                 <td>Uptime</td>
-                <td>--placeholder--</td>
+                <td><span id="uptime">Unavailable</span></td>
             </tr>
             <tr>
                 <td>Peak Activity</td>
-                <td>--placeholder--</td>
+                <td><span id="peak-activity">Unavailable</span></td>
+            </tr>
+            <tr>
+                <td>Server Version</td>
+                <td><span id="server-version">Unavailable</span></td>
             </tr>
             </tbody>
         </table>
 
-        <button class="mc-grn-btn">
+        <button id="server-switch" class="mc-grn-btn">
             ...
         </button>
     </div>
@@ -52,20 +55,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript">
-        window.addEventListener('load', function() {
-            var eventSource = new EventSource(MA_CONSTS.STATUS_PANEL_STREAM);
-
-            eventSource.onerror = function () {
-                console.error(MA_CONSTS.EVENTSOURCE_DISCONNECT_MSG);
-                this.close();
-            }
-
-            eventSource.onmessage = function (msg) {
-                console.log(msg.data);
-
-                // TODO
-            }
-        });
-    </script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/status_panel.js') }}"></script>
 {% endblock %}

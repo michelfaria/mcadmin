@@ -7,7 +7,6 @@
 
 {% block head %}
     {{ super() }}
-    <!--suppress ES6ConvertVarToLetConst -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
 {% endblock %}
@@ -22,39 +21,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript">
-        window.addEventListener('load', function () {
-            var consoleBox = document.getElementById('console-box');
-            var eventSource = new EventSource(MA_CONSTS.CONSOLE_PANEL_STREAM);
-
-            eventSource.onerror = function () {
-                console.error(MA_CONSTS.EVENTSOURCE_DISCONNECT_MSG);
-                this.close();
-            };
-
-            eventSource.onmessage = function (msg) {
-                console.log('EventSource: ' + msg.data);
-
-                if (msg.data === MA_CONSTS.SERVER_SHUTDOWN_ERR_CODE) {
-                    consoleShutdown();
-                } else {
-                    addConsoleLine(msg.data);
-                }
-            };
-
-            function consoleShutdown() {
-                addConsoleLine('Server is not running');
-            }
-
-            function addConsoleLine(text) {
-                var span = document.createElement('span');
-                span.classList.add('console-line');
-                span.innerText = text;
-
-                consoleBox.appendChild(span);
-
-                return span;
-            }
-        });
-    </script>
+    <script type="text/javascript" src="{{ url_for('static', 'js/console_panel.js') }}"></script>
 {% endblock %}
