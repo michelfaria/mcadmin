@@ -17,9 +17,7 @@ flask-login = "*"
 lxml = "*"
 requests = "*"
 cssselect = "*"
-pprint = "*"
 pyyaml = "*"
-fcntl = "*"
 
 [requires]
 python_version = "3.7"

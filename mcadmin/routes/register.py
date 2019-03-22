@@ -18,7 +18,7 @@ def register():
     then be redirected to the index page.
     """
     if is_registered():
-        return abort(401)
+        abort(401, 'This server is already registered')
 
     form = RegistrationForm()
 

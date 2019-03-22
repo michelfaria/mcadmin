@@ -1,21 +1,58 @@
 # mcadmin/routes/console_panel.py
 import logging
-from functools import reduce
 
-from flask import render_template, Response
+from flask import render_template, Response, request, abort
 from flask_login import login_required
 
+from mcadmin.decorators import json_route
 from mcadmin.main import app
 from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, console_output
+from mcadmin.server import server
 
 LOGGER = logging.getLogger(__name__)
 SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
+MAX_INPUT_LENGTH = 255
 
 
-@app.route('/console_panel')
+@app.route('/console_panel', methods=['GET', 'POST'])
 @login_required
+@json_route
 def console_panel():
-    return render_template('console_panel.html', console_history=''.join(console_output))
+    """
+    Route for displaying the server console control panel and entering console commands.
+
+    GET:
+        Will simply render the console_panel.html template.
+        Template arguments:
+            `console_history`: The console output buffer that should be displayed to the user so they can see what went
+            on the console while they were not looking.
+
+    POST:
+        Receives a JSON object with the following schema:
+            "input_line": <str>  <- Console line to enter
+
+        A HTTP 400 Bad Request error will be raised if:
+            - "input_line" key is not present or has no value
+            - "input_line" is over MAX_INPUT_LENGTH characters long
+
+        The "input_line" value will be passed to the server console process.
+    """
+    if request.method == 'GET':
+        return render_template('console_panel.html', console_history=''.join(console_output))
+    else:
+        assert request.method == 'POST'
+
+        data = request.get_json()
+        assert data is not None
+
+        input_line = data.get('input_line')
+        if input_line is None:
+            abort(400, 'No `input_line')
+        elif input_line > MAX_INPUT_LENGTH:
+            abort(400, 'Input line must not exceed %d characters.' % MAX_INPUT_LENGTH)
+
+        server.input_line(input_line)
+        return Response(200)
 
 
 @app.route('/console_panel_stream')
@@ -28,6 +65,7 @@ def console_panel_stream():
     If the server is not running, SERVER_NOT_RUNNING_ERR_CODE will be streamed instead every 10 seconds.
 
     """
+
     def generator():
         try:
             is_first_iter = True

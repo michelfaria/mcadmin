@@ -1,11 +1,11 @@
 # mcadmin/server/server_repo.py
 
+import logging
 import os
 import re
 from functools import wraps
 from pprint import pprint
 
-import logging
 import lxml.html
 import requests
 import yaml

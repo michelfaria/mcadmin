@@ -5,6 +5,8 @@ import threading
 
 from flask import render_template, request, abort, Response
 from flask_login import login_required
+
+from mcadmin.decorators import json_route
 from mcadmin.server import server
 
 from mcadmin.main import app
@@ -16,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 @app.route('/status_panel', methods=['GET', 'POST'])
 @login_required
+@json_route
 def status_panel():
     """
     The status panel displays the most important information about the server, such as Online Status, Uptime,
@@ -25,28 +28,24 @@ def status_panel():
         Will simply render the status panel.
 
     POST:
-        Will take a JSON object of the following format:
-        {
+        Will take a JSON object of the following schema:
             "action": <str>,           <- {"turn_on" | "turn_off"}
-            "jvm_args": <str | None>,  <- JVM Arguments
-        }
+            "jvm_args": <str | None>,  <- JVM Arguments (Optional)
 
         A HTTP 400 Bad Request response will be sent if:
             - The request body is not valid JSON
             - There is no "action" key in the JSON object
+
         The "action" key describes what action should be performed by the status panel.
 
         Actions:
-            - "turn_on":
-                Start the server. If the server is already started, it will respond with a HTTP 409 Conflict.
-            - "turn_off":
-                Stop the server. If the server is not running, it will respond with a HTTP 409 Conflict.
+            "turn_on": Start the server. If the server is already started, it will respond with a HTTP 409 Conflict.
+            "turn_off": Stop the server. If the server is not running, it will respond with a HTTP 409 Conflict.
 
         Optional Keys:
-            - "jvm_args":
-                Used in conjunction with the "turn_on" action. These JVM arguments will be passed to the server startup
-                command.
-                FIXME: It may be possible to perform shell command injection by adding semicolons to this field
+            "jvm_args": Used in conjunction with the "turn_on" action. These JVM arguments will be passed to the server
+            startup command. FIXME: It may be possible to perform shell command injection by adding semicolons to
+            this field.
 
 
     """
@@ -56,10 +55,11 @@ def status_panel():
         assert request.method == 'POST'
 
         data = request.get_json()
-        if data is None or data.get('action') is None:
-            return abort(Response('No action', 400))
+        assert data is not None
 
-        action = data['action']
+        action = data.get('action')
+        if action is None:
+            abort(400, 'No action')
 
         if action == 'turn_on':
             jvm_args = data.get('jvm_args', '')
@@ -67,7 +67,7 @@ def status_panel():
         elif action == 'turn_off':
             return turn_off()
         else:
-            return abort(Response('Unknown action', 400))
+            abort(400, 'Unknown action')
 
 
 @app.route('/status_panel_stream')
@@ -111,7 +111,7 @@ def turn_on(jvm_args):
         server.start(jvm_params=jvm_args)
         return Response(status=200)
     except ServerAlreadyRunningError:
-        return abort(Response('Server is already running', 409))
+        abort(409, 'Server is already running')
 
 
 def turn_off():
@@ -125,4 +125,4 @@ def turn_off():
         server.stop()
         return Response(status=200)
     except ServerNotRunningError:
-        return abort(Response('Server is not running', 409))
+        abort(409, 'Server is not running')
