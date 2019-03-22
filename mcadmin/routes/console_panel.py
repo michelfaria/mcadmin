@@ -15,10 +15,7 @@ SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
 @app.route('/console_panel')
 @login_required
 def console_panel():
-    history = b'\n'.join(console_output)
-    if history != b'':
-        history += b'\n'
-    return render_template('console_panel.html', console_history=history)
+    return render_template('console_panel.html', console_history=''.join(console_output))
 
 
 @app.route('/console_panel_stream')
