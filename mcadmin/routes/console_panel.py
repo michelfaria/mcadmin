@@ -1,6 +1,5 @@
 # mcadmin/routes/console_panel.py
 import logging
-import time
 
 from flask import render_template, Response
 from flask_login import login_required
@@ -21,19 +20,26 @@ def console_panel():
 @app.route('/console_panel_stream')
 @login_required
 def console_panel_stream():
+    """
+    Returns a Response (type: text/event-stream) to be consumed by an EventSource.
+
+    The Minecraft Server console's messages will be streamed.
+    If the server is not running, SERVER_NOT_RUNNING_ERR_CODE will be streamed instead every 10 seconds.
+
+    """
     def generator():
         try:
             while True:
                 with CONSOLE_OUTPUT_COND:
-                    if not is_server_running():
+                    if is_server_running():
+                        CONSOLE_OUTPUT_COND.wait()
+                        yield 'data: ' + str(console_output[-1]) + '\n\n'
+                    else:
                         yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
-                        CONSOLE_OUTPUT_COND.wait(timeout=10)  # Wait a little before checking again
-                        continue
-
-                    CONSOLE_OUTPUT_COND.wait()
-                    yield 'data: ' + str(console_output[-1]) + '\n\n'
+                        # Wait a little before checking again
+                        CONSOLE_OUTPUT_COND.wait(timeout=10)
         except GeneratorExit as e:
-            # Client quit console page
+            # This means the user quit the console page
             LOGGER.debug('GeneratorExit console_panel_stream: ' + str(e))
 
     return Response(generator(), mimetype='text/event-stream')

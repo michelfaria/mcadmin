@@ -1,23 +1,26 @@
 # mcadmin/routes/index.py
-import json
 import logging
-import time
 
-from flask import render_template, redirect, url_for, Response
-from flask_login import current_user, login_required
+from flask import redirect, url_for
 
 from mcadmin.io.registration import is_registered
-from mcadmin.main import app, login_manager
-from mcadmin.server.server import is_server_running
+from mcadmin.main import app
 
 LOGGER = logging.getLogger(__name__)
 
 
 @app.route('/')
 def index():
+    """
+    This is the landing page of the website.
+
+    The end-user should be redirected to the registration page if a password has not been registered for this instance
+    of MCAdmin. If the MCAdmin instance is registered, however, the user will be redirected to the Status Panel page.
+
+    Naturally, the status panel requires authentication, so the user should be redirected to the login page if they are
+    not yet logged in.
+    """
     if not is_registered():
         return redirect(url_for('register'))
-    elif not current_user.is_authenticated:
-        return login_manager.unauthorized()
     else:
         return redirect(url_for('status_panel'))

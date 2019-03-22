@@ -63,6 +63,16 @@ class ServerNotRunningError(Exception):
 
 
 def is_server_running():
+    """
+    :returns: true if the server is running.
+
+    Implementation notes:
+        The server is considered to be running if:
+            - `proc` references a process
+            - There is no return code from `proc.poll()`
+
+        In case `proc` references a process, yet it has a return code, that means that the server must have crashed.
+    """
     if proc is None:
         return False
     else:
@@ -77,11 +87,24 @@ def is_server_running():
 
 
 def _notify_status_change():
+    """
+    Notifies all threads waiting on the SERVER_STATUS_CHANGE Condition.
+    """
     with SERVER_STATUS_CHANGE:
         SERVER_STATUS_CHANGE.notify_all()
 
 
 def stop():
+    """
+    Stops the server.
+
+    It will first try to stop the server gracefully with a SIGTERM, but if the server does not close within
+    SIGTERM_WAIT_SECONDS seconds, the server process will be forcefully terminated.
+
+    This method notifies a status change.
+
+    :raises ServerNotRunningError: if the server is not running
+    """
     global proc
     global console_thread
 
@@ -114,15 +137,28 @@ def stop():
 
 
 def _on_program_exit():
+    """
+    Close the server before exiting the Python interpreter.
+    """
     if is_server_running():
         LOGGER.info('Python is exiting: terminating server process.')
         stop()
 
 
+# Register the _on_program_exit function to be ran before the Python interpreter quits.
 atexit.register(_on_program_exit)
 
 
 def _locate_server_file_name():
+    """
+    Locates the server executable .jar file to be ran by MCAdmin.
+
+    The method will look for any files inside the server directory that are named `minecraft_server-<version>.jar`.
+
+    :raise FileNotFoundError: if no server executables were found.
+    :raise TooManyMatchesError: if more than one server executable was found.
+    :return: The filename of the server executable.
+    """
     matches = glob.glob(os.path.join(SERVER_DIR, 'minecraft_server-*.jar'))
     if len(matches) == 0:
         raise FileNotFoundError(
@@ -133,6 +169,12 @@ def _locate_server_file_name():
 
 
 def _download_latest_vanilla_server():
+    """
+    Downloads the latest vanilla server from the internet and writes the file to SERVER_DIR.
+    The filename will be the full name of the version.
+
+    :raises IOError: If download failed after MAX_DOWNLOAD_ATTEMPTS attempts
+    """
     version, full_name, link = server_repo.latest_stable_ver()
 
     for attempt in range(MAX_DOWNLOAD_ATTEMPTS):
@@ -142,6 +184,7 @@ def _download_latest_vanilla_server():
             write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
 
             LOGGER.info('Done. Writing to %s ...' % write_to)
+
             with open(write_to, 'wb') as f:
                 f.write(response.content)
             return full_name
@@ -153,6 +196,10 @@ def _download_latest_vanilla_server():
 
 
 def _agree_eula():
+    """
+    Creates an `eula.txt` file inside the server directory.
+    Writes the text required to agree to the Mojang EULA to the file.
+    """
     eula_path = os.path.join(SERVER_DIR, 'eula.txt')
     with open(eula_path, 'w') as f:
         f.write(
@@ -163,6 +210,23 @@ def _agree_eula():
 
 
 def start(server_jar_name=None, jvm_params=''):
+    """
+    Starts the server.
+
+    The latest server file will be downloaded automatically if `server_jar_name` was not specified and a server executable
+    does not exist inside the server directory.
+
+    This will also start the console thread.
+    This method notified a status change.
+
+    :param server_jar_name: The filename of the server to use.
+                            If not specified, it will find the server file automatically.
+    :param jvm_params:      Parameters used when starting the JVM. Nothing by default.
+
+    :raise ServerAlreadyRunningError: If the server is already running.
+    :raise FileNotFoundError:         If `server_jar_name` param was specified but a file by that name was not found
+                                      inside the server directory.
+    """
     global proc
 
     if is_server_running():
@@ -195,6 +259,11 @@ def start(server_jar_name=None, jvm_params=''):
 
 
 def _start_console_thread():
+    """
+    Starts the console thread and assigns it to the global `console_thread` variable.
+
+    :raise ValueError: if a thread is already referenced by `console_thread`.
+    """
     global console_thread
 
     if console_thread is not None:
@@ -205,6 +274,12 @@ def _start_console_thread():
 
 
 def _console_worker():
+    """
+    Should run in a separate thread.
+
+    Will read the output from the server process constantly until the server is stopped. It will add the output lines
+    to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
+    """
     while is_server_running():
         assert proc is not None
         assert proc.poll() is None
@@ -217,18 +292,17 @@ def _console_worker():
 
 
 def input_line(text):
+    """
+    Sends an input to the server process.
+    :param text: Input to send
+    """
     _require_server()
     proc.stdin.write(text)
 
 
-def input_lines(lines):
-    _require_server()
-    proc.stdin.writelines(lines)
-
-
 def _require_server():
     """
-    Raises a ValueError if the server is not running
+    :raise ValueError: if the server is not running
     """
     if not is_server_running():
         raise ValueError('Server needs to be running to do this')
