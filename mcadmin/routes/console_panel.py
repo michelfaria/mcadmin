@@ -1,5 +1,6 @@
 # mcadmin/routes/console_panel.py
 import logging
+from functools import reduce
 
 from flask import render_template, Response
 from flask_login import login_required
@@ -14,7 +15,10 @@ SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
 @app.route('/console_panel')
 @login_required
 def console_panel():
-    return render_template('console_panel.html')
+    history = b'\n'.join(console_output)
+    if history != b'':
+        history += b'\n'
+    return render_template('console_panel.html', console_history=history)
 
 
 @app.route('/console_panel_stream')
@@ -29,15 +33,19 @@ def console_panel_stream():
     """
     def generator():
         try:
+            is_first_iter = True
             while True:
                 with CONSOLE_OUTPUT_COND:
                     if is_server_running():
+                        # Do not attempt to send any data in first loop iteration.
+                        # This is because there is usually no data to send.
+                        if not is_first_iter:
+                            yield 'data: ' + str(console_output[-1]) + '\n\n'
                         CONSOLE_OUTPUT_COND.wait()
-                        yield 'data: ' + str(console_output[-1]) + '\n\n'
                     else:
                         yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
-                        # Wait a little before checking again
-                        CONSOLE_OUTPUT_COND.wait(timeout=10)
+                        CONSOLE_OUTPUT_COND.wait()
+                is_first_iter = False
         except GeneratorExit as e:
             # This means the user quit the console page
             LOGGER.debug('GeneratorExit console_panel_stream: ' + str(e))

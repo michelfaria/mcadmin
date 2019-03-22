@@ -32,11 +32,5 @@ function consoleShutdown() {
 }
 
 function addConsoleLine(text) {
-    var span = document.createElement('span');
-    span.classList.add('console-line');
-    span.innerText = text;
-
-    consoleBox.appendChild(span);
-
-    return span;
+    consoleBox.value += text + '\n';
 }

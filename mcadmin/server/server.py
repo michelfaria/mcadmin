@@ -285,6 +285,7 @@ def _console_worker():
         assert proc.poll() is None
         line = proc.stdout.readline()
         if line != b'':
+            encoded = line.encode('utf-8')
             console_output.append(line)
             LOGGER.debug(line)
             with CONSOLE_OUTPUT_COND:

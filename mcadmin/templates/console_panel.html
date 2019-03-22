@@ -14,8 +14,10 @@
 {% block content %}
     {{ toolbar() }}
     <div class="mc-card console-container">
-        <div id="console-box" class="console-box">
-        </div>
+        <!--suppress HtmlFormInputWithoutLabel -->
+        <textarea id="console-box" class="console-box" readonly>
+            {{ console_history }}
+        </textarea>
     </div>
 {% endblock %}
 
