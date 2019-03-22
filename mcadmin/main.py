@@ -5,9 +5,9 @@ import os.path
 from flask import Flask
 from flask_login import LoginManager
 from flask_scss import Scss
-
-# configure Flask
 from mcadmin.model.user import User
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(32)
@@ -17,7 +17,7 @@ Scss(app)
 
 # register routes
 # noinspection PyUnresolvedReferences
-from mcadmin.routes import index, register, login, console_panel, logout
+from mcadmin.routes import index, register, login, console_panel, logout, status_panel
 
 login_manager.login_view = '/login'
 login_manager.login_message = 'Please log in'

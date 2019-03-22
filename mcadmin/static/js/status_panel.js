@@ -1,6 +1,11 @@
 // mcadmin/static/js/status_panel.js
 
-var serverSwitchBtn, serverStatusSpan, uptimeSpan, peakActivitySpan, serverVersionSpan;
+var isServerOn,
+    serverSwitchBtn,
+    serverStatusSpan,
+    uptimeSpan,
+    peakActivitySpan,
+    serverVersionSpan;
 
 window.addEventListener('load', function () {
     serverSwitchBtn = document.getElementById('server-switch');
@@ -9,6 +14,7 @@ window.addEventListener('load', function () {
     peakActivitySpan = document.getElementById('peak-activity');
     serverVersionSpan = document.getElementById('server-version');
     initEventSource();
+    initServerSwitchBtnListener();
 });
 
 function initEventSource() {
@@ -36,9 +42,34 @@ function initEventSource() {
             serverStatusSpan.innerText = 'OFF';
         }
 
+        isServerOn = isServerRunning;
+
         uptimeSpan.innerText = uptime;
         peakActivitySpan.innerText = peakActivity;
     }
+}
+
+function initServerSwitchBtnListener() {
+    serverSwitchBtn.addEventListener('click', function () {
+        var xhr = new XMLHttpRequest();
+        var url = window.location;
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                console.log('XHR Status: ' + xhr.status);
+                console.log('XHR Response Text: ' + xhr.responseText);
+            }
+        };
+
+        var data = JSON.stringify({
+            'action': isServerOn ? 'turn_off' : 'turn_on'
+        });
+
+        console.log('Sending data: ' + data);
+        xhr.send(data);
+    });
 }
 
 // https://stackoverflow.com/questions/9763441/milliseconds-to-time-in-javascript

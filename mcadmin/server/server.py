@@ -29,6 +29,13 @@ proc = None  # type: Popen
 # Thread that updates console_output deque with new lines
 console_thread = None  # type: threading.Thread
 
+# This condition will be notified every time the server
+# status change from ON to OFF or vice-versa.
+SERVER_STATUS_CHANGE = threading.Condition()
+
+# This condition will be notified whenever there is a console output
+CONSOLE_OUTPUT_COND = threading.Condition()
+
 # Create server files directory if it does not exist.
 if not os.path.exists(SERVER_DIR):
     os.mkdir(SERVER_DIR)
@@ -56,7 +63,22 @@ class ServerNotRunningError(Exception):
 
 
 def is_server_running():
-    return proc is not None and proc.poll() is None
+    if proc is None:
+        return False
+    else:
+        return_code = proc.poll()
+        if return_code is None:
+            return True
+        else:
+            LOGGER.warning(
+                'Server may have crashed! Reference to process still exists, but the process ended '
+                'with return code %d.' % return_code)
+            return False
+
+
+def _notify_status_change():
+    with SERVER_STATUS_CHANGE:
+        SERVER_STATUS_CHANGE.notify_all()
 
 
 def stop():
@@ -87,6 +109,8 @@ def stop():
 
     proc = None
     console_thread = None
+
+    _notify_status_change()
 
 
 def _on_program_exit():
@@ -167,6 +191,7 @@ def start(server_jar_name=None, jvm_params=''):
     proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
     _start_console_thread()
+    _notify_status_change()
 
 
 def _start_console_thread():
@@ -181,10 +206,14 @@ def _start_console_thread():
 
 def _console_worker():
     while is_server_running():
-        assert proc is not None and proc.poll() is None
-        line = proc.stdout.readlines()
-        if len(line) > 0:
+        assert proc is not None
+        assert proc.poll() is None
+        line = proc.stdout.readline()
+        if line != b'':
             console_output.append(line)
+            LOGGER.debug(line)
+            with CONSOLE_OUTPUT_COND:
+                CONSOLE_OUTPUT_COND.notify_all()
 
 
 def input_line(text):

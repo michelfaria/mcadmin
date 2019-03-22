@@ -20,23 +20,4 @@ def index():
     elif not current_user.is_authenticated:
         return login_manager.unauthorized()
     else:
-        return redirect(url_for('status'))
-
-
-@app.route('/status_panel_stream')
-@login_required
-def status_panel_stream():
-    def generator():
-        try:
-            while True:
-                msg = {
-                    'is_server_running': is_server_running(),
-                    'uptime': 0,
-                    'peak_activity': 0
-                }
-                yield 'data: ' + json.dumps(msg) + '\n\n'
-                time.sleep(10)
-        except GeneratorExit as e:
-            LOGGER.debug('GeneratorExit status_panel_stream: ' + str(e))
-
-    return Response(generator(), mimetype='text/event-stream')
+        return redirect(url_for('status_panel'))
