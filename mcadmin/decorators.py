@@ -1,23 +1,11 @@
 # mcadmin/decorators.py
-from functools import wraps
 
-from flask import request, Response, abort
+from flask import request, abort
 
 
-def json_route(f, method=None):
+def require_json():
     """
-    This will return a 400 HTTP/Bad Request if the request does not have JSON content.
-
-    :param method: Optionally a list of the HTTP Methods that will require JSON. ['POST'] by default.
+    This will raise a 400 HTTP/Bad Request error if the request does not have JSON content.
     """
-    if method is None:
-        method = ['POST']
-
-    @wraps
-    def wrapper(*args, **kwargs):
-        if request.method in method:
-            if not request.is_json:
-                abort(400, 'Expected JSON')
-            return f(args, kwargs)
-
-    return wrapper
+    if not request.is_json:
+        abort(400, 'Expected JSON')

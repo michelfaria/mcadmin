@@ -25,6 +25,7 @@ console_output = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
 
 # Java server process handle
 proc = None  # type: Popen
+proc_lock = threading.RLock()
 
 # Thread that updates console_output deque with new lines
 console_thread = None  # type: threading.Thread
@@ -73,17 +74,18 @@ def is_server_running():
 
         In case `proc` references a process, yet it has a return code, that means that the server must have crashed.
     """
-    if proc is None:
-        return False
-    else:
-        return_code = proc.poll()
-        if return_code is None:
-            return True
-        else:
-            LOGGER.warning(
-                'Server may have crashed! Reference to process still exists, but the process ended '
-                'with return code %d.' % return_code)
+    with proc_lock:
+        if proc is None:
             return False
+        else:
+            return_code = proc.poll()
+            if return_code is None:
+                return True
+            else:
+                LOGGER.warning(
+                    'Server may have crashed! Reference to process still exists, but the process ended '
+                    'with return code %d.' % return_code)
+                return False
 
 
 def _notify_status_change():
@@ -108,30 +110,33 @@ def stop():
     global proc
     global console_thread
 
-    if not is_server_running():
-        raise ServerNotRunningError('Server is not running: no process reference.')
-    return_code = proc.poll()
-    if return_code is not None:
-        raise ServerNotRunningError('Server is not running: no return code.')
+    with proc_lock:
+        if not is_server_running():
+            raise ServerNotRunningError('Server is not running: no process reference.')
+        return_code = proc.poll()
+        if return_code is not None:
+            raise ServerNotRunningError('Server is not running: no return code.')
 
-    LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
-    proc.send_signal(signal.SIGTERM)
-    proc.wait(SIGTERM_WAIT_SECONDS)
+        LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
+        proc.send_signal(signal.SIGTERM)
+        proc.wait(SIGTERM_WAIT_SECONDS)
 
-    return_code = proc.poll()
+        return_code = proc.poll()
 
-    if return_code is None:
-        LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
-        proc.terminate()
+        if return_code is None:
+            LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
+            proc.terminate()
 
     LOGGER.info('Server process closed.')
 
-    # The console thread should not be alive anymore,
-    # because the process is closed.
-    assert not console_thread.is_alive()
-
-    proc = None
+    # Wait for console_thread to finish
+    LOGGER.info('Waiting for console thread to finish...')
+    console_thread.join()
     console_thread = None
+    LOGGER.info('Console thread done.')
+
+    with proc_lock:
+        proc = None
 
     _notify_status_change()
 
@@ -229,33 +234,34 @@ def start(server_jar_name=None, jvm_params=''):
     """
     global proc
 
-    if is_server_running():
-        raise ServerAlreadyRunningError('Server is already running')
+    with proc_lock:
+        if is_server_running():
+            raise ServerAlreadyRunningError('Server is already running')
 
-    # if a server jar name was specified,
-    # it will be used instead of the latest version
-    if server_jar_name:
-        path = os.path.join(SERVER_DIR, server_jar_name)
-        if not os.path.exists(path):
-            raise FileNotFoundError('File %s not found' % os.path.abspath(path))
-    else:
-        # server file not specified
-        # download latest stable version
-        try:
-            server_jar_name = _locate_server_file_name()
-        except FileNotFoundError:
-            LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
-            server_jar_name = _download_latest_vanilla_server()
-    assert server_jar_name
+        # if a server jar name was specified,
+        # it will be used instead of the latest version
+        if server_jar_name:
+            path = os.path.join(SERVER_DIR, server_jar_name)
+            if not os.path.exists(path):
+                raise FileNotFoundError('File %s not found' % os.path.abspath(path))
+        else:
+            # server file not specified
+            # download latest stable version
+            try:
+                server_jar_name = _locate_server_file_name()
+            except FileNotFoundError:
+                LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
+                server_jar_name = _download_latest_vanilla_server()
+        assert server_jar_name
 
-    # eula has to be agreed to otherwise server won't start
-    _agree_eula()
+        # eula has to be agreed to otherwise server won't start
+        _agree_eula()
 
-    command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
-    proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
+        command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
+        proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
-    _start_console_thread()
-    _notify_status_change()
+        _start_console_thread()
+        _notify_status_change()
 
 
 def _start_console_thread():
@@ -281,11 +287,18 @@ def _console_worker():
     to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
     """
     while is_server_running():
-        assert proc is not None
-        assert proc.poll() is None
-        line = proc.stdout.readline()
+        # This ugly hack is required because I needed an atomic comparison, so that the code wouldn't try to access the
+        # `proc` variable if it had changed by that point.
+        # On top of that, a lock for `proc` should not be acquired here because `proc.stdout.readline()` is blocking.
 
-        if line != b'':
+        # Line being set to none indicates that the process is closed.
+        line = proc.stdout.readline() \
+            if proc is not None and proc.poll() is None \
+            else None
+        if line is None:
+            break
+
+        if line != b'':  # Sometimes it reads this and I don't want it
             encoded = line.decode('utf-8')
             console_output.append(encoded)
             LOGGER.debug(encoded)
@@ -297,18 +310,23 @@ def _console_worker():
 def input_line(text):
     """
     Sends an input to the server process.
+
     :param text: Input to send
+    :raise ServerNotRunningError: if the server is not running
     """
-    _require_server()
-    proc.stdin.write(text)
+    with proc_lock:
+        _require_server()
+        if isinstance(text, str):
+            text = text.encode()
+        proc.stdin.write(text)
 
 
 def _require_server():
     """
-    :raise ValueError: if the server is not running
+    :raise ServerNotRunningError: if the server is not running
     """
     if not is_server_running():
-        raise ValueError('Server needs to be running to do this')
+        raise ServerNotRunningError('Server needs to be running to do this')
 
 
 if __name__ == '__main__':

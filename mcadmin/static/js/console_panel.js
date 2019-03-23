@@ -1,11 +1,13 @@
 // mcadmin/static/js/console_panel.js
 
-// nodes
 var consoleBox;
+var consoleInput;
 
 window.addEventListener('load', function () {
     consoleBox = document.getElementById('console-box');
+    consoleInput = document.getElementById('console-input');
     initEventSource();
+    initConsoleInput();
 });
 
 function initEventSource() {
@@ -33,4 +35,29 @@ function consoleShutdown() {
 
 function addConsoleLine(text) {
     consoleBox.value += text + '\n';
+}
+
+function initConsoleInput() {
+    consoleInput.addEventListener('keypress', function (event) {
+        if (!event) event = window.event;
+        var keycode = event.which;
+        if (keycode === 13) {
+            // Enter key pressed
+            var xhr = new XMLHttpRequest();
+            var url = window.location;
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    console.log('XHR Response status: ' + xhr.status);
+                    console.log('XHR Response text: ' + xhr.responseText);
+                }
+            };
+
+            xhr.send(JSON.stringify({ 'input_line': consoleInput.value }));
+            consoleInput.value = '';
+            return false;
+        }
+    });
 }
