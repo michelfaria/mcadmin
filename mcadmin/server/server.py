@@ -8,6 +8,7 @@ import os
 import signal
 import time
 import collections
+from enum import Enum
 from subprocess import Popen, PIPE
 
 import requests
@@ -15,27 +16,22 @@ import requests
 from mcadmin.server import server_repo
 
 LOGGER = logging.getLogger(__name__)
-SERVER_DIR = 'server_files'
-MAX_DOWNLOAD_ATTEMPTS = 2
-SIGTERM_WAIT_SECONDS = 30
-CONSOLE_OUTPUT_MAX_LINES = 100
+SERVER_DIR = 'server_files'  # Server files directory
+MAX_DOWNLOAD_ATTEMPTS = 2  # Maximum amount of times to try to download a server executable from the internet
+SIGTERM_WAIT_SECONDS = 30  # Maximum amount of time to wait for a process to end
+CONSOLE_OUTPUT_MAX_LINES = 100  # Maximum amount of lines that there can be inside the console_output deque
+
+# Notified every time the server status change from ON to OFF or vice-versa.
+SERVER_STATUS_CHANGE = threading.Condition()
+# Notified whenever there is a console output
+CONSOLE_OUTPUT_COND = threading.Condition()
 
 # Console output buffer that will be sent to the client when they open the console page
 console_output = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
 
-# Java server process handle
+# Java Server Process Handle
 proc = None  # type: Popen
 proc_lock = threading.RLock()
-
-# Thread that updates console_output deque with new lines
-console_thread = None  # type: threading.Thread
-
-# This condition will be notified every time the server
-# status change from ON to OFF or vice-versa.
-SERVER_STATUS_CHANGE = threading.Condition()
-
-# This condition will be notified whenever there is a console output
-CONSOLE_OUTPUT_COND = threading.Condition()
 
 # Create server files directory if it does not exist.
 if not os.path.exists(SERVER_DIR):
@@ -63,29 +59,33 @@ class ServerNotRunningError(Exception):
     pass
 
 
-def is_server_running():
+class ServerStatus(Enum):
     """
-    :returns: true if the server is running.
+    Enum for representing server statuses. See is_server_running() for usage.
+    """
+    RUNNING = 'running'
+    CLOSED = 'closed'
+    DISABLED = 'disabled'
 
-    Implementation notes:
-        The server is considered to be running if:
-            - `proc` references a process
-            - There is no return code from `proc.poll()`
 
-        In case `proc` references a process, yet it has a return code, that means that the server must have crashed.
+def server_status():
+    """
+    :returns ServerStatus:
+        ServerStatus.RUNNING: If server process is referenced and running
+        ServerStatus.CLOSED: If server process is referenced but has return code
+        ServerStatus.DISABLED: If server process is not referenced
     """
     with proc_lock:
         if proc is None:
-            return False
-        else:
-            return_code = proc.poll()
-            if return_code is None:
-                return True
-            else:
-                LOGGER.warning(
-                    'Server may have crashed! Reference to process still exists, but the process ended '
-                    'with return code %d.' % return_code)
-                return False
+            return ServerStatus.DISABLED
+        return_code = proc.poll()
+        if return_code is None:
+            return ServerStatus.RUNNING
+        return ServerStatus.CLOSED
+
+
+def is_server_running():
+    return server_status() == ServerStatus.RUNNING
 
 
 def _notify_status_change():
@@ -108,35 +108,31 @@ def stop():
     :raises ServerNotRunningError: if the server is not running
     """
     global proc
-    global console_thread
 
     with proc_lock:
-        if not is_server_running():
-            raise ServerNotRunningError('Server is not running: no process reference.')
-        return_code = proc.poll()
-        if return_code is not None:
-            raise ServerNotRunningError('Server is not running: no return code.')
+        status = server_status()
 
-        LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
-        proc.send_signal(signal.SIGTERM)
-        proc.wait(SIGTERM_WAIT_SECONDS)
+        if status == ServerStatus.RUNNING:
+            LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
+            proc.send_signal(signal.SIGTERM)
+            proc.wait(SIGTERM_WAIT_SECONDS)
 
-        return_code = proc.poll()
+            return_code = proc.poll()
 
-        if return_code is None:
-            LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
-            proc.terminate()
+            if return_code is None:
+                LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
+                proc.terminate()
+
+        elif status == ServerStatus.CLOSED:
+            LOGGER.info('Server process was referenced, but it was already closed. Discarding reference.')
+
+        else:
+            assert status == ServerStatus.DISABLED
+            raise ServerNotRunningError('Server already stopped')
+
+        proc = None
 
     LOGGER.info('Server process closed.')
-
-    # Wait for console_thread to finish
-    LOGGER.info('Waiting for console thread to finish...')
-    console_thread.join()
-    console_thread = None
-    LOGGER.info('Console thread done.')
-
-    with proc_lock:
-        proc = None
 
     _notify_status_change()
 
@@ -261,6 +257,7 @@ def start(server_jar_name=None, jvm_params=''):
         proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
         _start_console_thread()
+        _start_watchdog_thread()
         _notify_status_change()
 
 
@@ -270,41 +267,53 @@ def _start_console_thread():
 
     :raise ValueError: if a thread is already referenced by `console_thread`.
     """
-    global console_thread
 
-    if console_thread is not None:
-        raise ValueError('Thread already exists')
+    def _console_worker():
+        """
+        Will read the output from the server process constantly until the server is stopped. It will add the output lines
+        to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
+        """
+        while is_server_running():
+            # This ugly hack is required because I needed an atomic comparison, so that the code wouldn't try to
+            # access the `proc` variable if it had changed by that point. On top of that, a lock for `proc` should
+            # not be acquired here because `proc.stdout.readline()` is blocking.
 
-    console_thread = threading.Thread(target=_console_worker)
-    console_thread.start()
+            # Line being set to none indicates that the process is closed.
+            line = proc.stdout.readline() \
+                if proc is not None and proc.poll() is None \
+                else None
+            if line is None:
+                break
+
+            if line != b'':  # Sometimes it reads this and I don't want it
+                encoded = line.decode('utf-8')
+                console_output.append(encoded)
+                LOGGER.debug(encoded)
+
+                with CONSOLE_OUTPUT_COND:
+                    CONSOLE_OUTPUT_COND.notify_all()
+
+    threading.Thread(target=_console_worker).start()
 
 
-def _console_worker():
+def _start_watchdog_thread():
     """
-    Should run in a separate thread.
+    Starts the watchdog thread and assigns it to the global `watchdog_thread` variable.
 
-    Will read the output from the server process constantly until the server is stopped. It will add the output lines
-    to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
+    :raise ValueError: If `watchdog_thread` already has an assignment
     """
-    while is_server_running():
-        # This ugly hack is required because I needed an atomic comparison, so that the code wouldn't try to access the
-        # `proc` variable if it had changed by that point.
-        # On top of that, a lock for `proc` should not be acquired here because `proc.stdout.readline()` is blocking.
+    def _watchdog_worker():
+        """
+        Will officially stop the server whenever it sees that the process has ended, until `proc` is de-referenced.
+        """
+        while proc is not None:
+            if server_status() == ServerStatus.CLOSED:
+                LOGGER.debug('[Watchdog] Process is closed; calling stop()')
+                stop()
+            time.sleep(1)
+        LOGGER.debug('[Watchdog] Quit')
 
-        # Line being set to none indicates that the process is closed.
-        line = proc.stdout.readline() \
-            if proc is not None and proc.poll() is None \
-            else None
-        if line is None:
-            break
-
-        if line != b'':  # Sometimes it reads this and I don't want it
-            encoded = line.decode('utf-8')
-            console_output.append(encoded)
-            LOGGER.debug(encoded)
-
-            with CONSOLE_OUTPUT_COND:
-                CONSOLE_OUTPUT_COND.notify_all()
+    threading.Thread(target=_watchdog_worker).start()
 
 
 def input_line(text):
@@ -323,6 +332,7 @@ def input_line(text):
         LOGGER.debug('Input: ' + str(text))
         proc.stdin.write(text)
         proc.stdin.flush()
+
 
 def _require_server():
     """
