@@ -322,7 +322,7 @@ def input_line(text):
             text += b'\n'
         LOGGER.debug('Input: ' + str(text))
         proc.stdin.write(text)
-
+        proc.stdin.flush()
 
 def _require_server():
     """
