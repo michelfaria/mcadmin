@@ -318,6 +318,9 @@ def input_line(text):
         _require_server()
         if isinstance(text, str):
             text = text.encode()
+        if not text.endswith(b'\n'):
+            text += b'\n'
+        LOGGER.debug('Input: ' + str(text))
         proc.stdin.write(text)
 
 
