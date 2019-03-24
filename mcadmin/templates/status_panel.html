@@ -1,7 +1,6 @@
 {# mcadmin/templates/status_panel.html #}
 
-{% extends "_layout.html" %}
-{% from "_panelmacros.html" import toolbar %}
+{% extends "_panel_page.html" %}
 
 
 {% block title %}Status{% endblock %}
@@ -9,13 +8,12 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/status_panel.css') }}"/>
 {% endblock %}
 
 
 {% block content %}
-    {{ toolbar() }}
+    {{ super() }}
     <div class="mc-card status-card">
         <p>Server status</p>
 

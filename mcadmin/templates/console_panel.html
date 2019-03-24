@@ -1,18 +1,16 @@
 {# mcadmin/templates/console_panel.html #}
 
-{% extends "_layout.html" %}
-{% from "_panelmacros.html" import toolbar %}
+{% extends "_panel_page.html" %}
 
 {% block title %}Console{% endblock %}
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
 {% endblock %}
 
 {% block content %}
-    {{ toolbar() }}
+    {{ super() }}
     <div class="mc-card console-container">
         <!--suppress HtmlFormInputWithoutLabel -->
         <textarea id="console-box" class="console-box" readonly>

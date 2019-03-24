@@ -1,4 +1,6 @@
-{# mcadmin/templates/_panelmacros.html #}
+{# mcadmin/templates/_panel_page.html #}
+
+{% extends "_layout.html" %}
 
 {% macro toolbar_entry(icon, label, addr) %}
     <a href="{{ addr if addr else '#' }}">
@@ -13,10 +15,20 @@
 
 {% macro toolbar() %}
     <div class="mc-card toolbar">
-        {{ toolbar_entry("img/icons/lamp.png", "Server Status", '/') }}
+        {{ toolbar_entry("img/icons/lamp.png", "Server Status", '/status_panel') }}
         {{ toolbar_entry("img/icons/command_line.png", "Console", '/console_panel') }}
-        {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration") }}
+        {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration", '/configuration_panel') }}
         {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
         {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
     </div>
 {% endmacro %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    {{ toolbar() }}
+{% endblock %}

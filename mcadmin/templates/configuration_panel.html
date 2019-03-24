@@ -1,0 +1,22 @@
+{# mcadmin/templates/configuration_panel.html #}
+
+{% extends "_layout.html" %}
+{% from "_panelmacros.html" import toolbar %}
+
+{% block title %}
+    Configuration
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/configuration_page.css') }}">
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    {{ toolbar() }}
+    <div class="mc-card">
+        <span>CONFIGURATION</span>
+    </div>
+{% endblock %}
