@@ -2,8 +2,8 @@
 
 {% extends "_layout.html" %}
 
-{% macro toolbar_entry(icon, label, addr) %}
-    <a href="{{ addr if addr else '#' }}">
+{% macro toolbar_entry(icon, label, url) %}
+    <a href="{{ url if url else '#' }}">
         <div class="toolbar-entry">
             <div class="toolbar-icon-box">
                 <img class="toolbar-entry-icon" src="{{ url_for('static', filename=icon) }}" alt="Icon">
@@ -15,9 +15,9 @@
 
 {% macro toolbar() %}
     <div class="mc-card toolbar">
-        {{ toolbar_entry("img/icons/lamp.png", "Server Status", '/status_panel') }}
-        {{ toolbar_entry("img/icons/command_line.png", "Console", '/console_panel') }}
-        {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration", '/configuration_panel') }}
+        {{ toolbar_entry("img/icons/lamp.png", "Server Status", url_for('status_panel')) }}
+        {{ toolbar_entry("img/icons/command_line.png", "Console", url_for('console_panel')) }}
+        {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration", url_for('configuration_panel')) }}
         {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
         {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
     </div>
@@ -25,7 +25,7 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
 {% endblock %}
 
 {% block content %}

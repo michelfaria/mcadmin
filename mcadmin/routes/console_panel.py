@@ -4,7 +4,7 @@ import logging
 from flask import render_template, Response, request, abort
 from flask_login import login_required
 
-from mcadmin.decorators import require_json
+from mcadmin.util import require_json
 from mcadmin.main import app
 from mcadmin.server import server
 from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, console_output, ServerNotRunningError
@@ -14,7 +14,7 @@ SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
 MAX_INPUT_LENGTH = 255
 
 
-@app.route('/console_panel', methods=['GET', 'POST'])
+@app.route('/panel/console', methods=['GET', 'POST'])
 @login_required
 def console_panel():
     """
@@ -61,7 +61,7 @@ def console_panel():
         return '', 204
 
 
-@app.route('/console_panel_stream')
+@app.route('/panel/console/stream')
 @login_required
 def console_panel_stream():
     """

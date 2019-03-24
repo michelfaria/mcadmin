@@ -17,7 +17,7 @@ Scss(app)
 
 # register routes
 # noinspection PyUnresolvedReferences
-from mcadmin.routes import index, register, login, console_panel, logout, status_panel
+from mcadmin.routes import index, register, login, console_panel, logout, status_panel, configuration_panel
 
 login_manager.login_view = '/login'
 login_manager.login_message = 'Please log in'

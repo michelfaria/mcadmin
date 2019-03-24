@@ -5,7 +5,7 @@ import logging
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
-from mcadmin.decorators import require_json
+from mcadmin.util import require_json
 from mcadmin.main import app
 from mcadmin.server import server
 from mcadmin.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
@@ -14,7 +14,7 @@ from mcadmin.server.server import ServerAlreadyRunningError, ServerNotRunningErr
 LOGGER = logging.getLogger(__name__)
 
 
-@app.route('/status_panel', methods=['GET', 'POST'])
+@app.route('/panel/status', methods=['GET', 'POST'])
 @login_required
 def status_panel():
     """
@@ -68,7 +68,7 @@ def status_panel():
             abort(400, 'Unknown action')
 
 
-@app.route('/status_panel_stream')
+@app.route('/panel/status/stream')
 @login_required
 def status_panel_stream():
     """

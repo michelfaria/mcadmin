@@ -1,4 +1,4 @@
-# mcadmin/decorators.py
+# mcadmin/util.py
 
 from flask import request, abort
 
