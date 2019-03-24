@@ -1,15 +1,13 @@
 # mcadmin/routes/status_panel.py
 import json
 import logging
-import threading
 
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
-from mcadmin.decorators import json_route
-from mcadmin.server import server
-
+from mcadmin.decorators import require_json
 from mcadmin.main import app
+from mcadmin.server import server
 from mcadmin.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
     SERVER_STATUS_CHANGE
 
@@ -18,7 +16,6 @@ LOGGER = logging.getLogger(__name__)
 
 @app.route('/status_panel', methods=['GET', 'POST'])
 @login_required
-@json_route
 def status_panel():
     """
     The status panel displays the most important information about the server, such as Online Status, Uptime,
@@ -53,6 +50,7 @@ def status_panel():
         return render_template('status_panel.html')
     else:
         assert request.method == 'POST'
+        require_json()
 
         data = request.get_json()
         assert data is not None
@@ -92,7 +90,7 @@ def status_panel_stream():
                 }
                 yield 'data: ' + json.dumps(msg) + '\n\n'
                 with SERVER_STATUS_CHANGE:
-                    SERVER_STATUS_CHANGE.wait(timeout=60)
+                    SERVER_STATUS_CHANGE.wait()
         except GeneratorExit as e:
             LOGGER.debug('GeneratorExit status_panel_stream: ' + str(e))
 
@@ -102,14 +100,15 @@ def status_panel_stream():
 def turn_on(jvm_args):
     """
     Turns the server on.
+
     Returns a HTTP 409 Conflict response if the server is already running.
 
     :param jvm_args: Arguments used in the initialization of the JVM.
-    :return: flask.Response
+    :return flask.Response: HTTP 204 No Content
     """
     try:
         server.start(jvm_params=jvm_args)
-        return Response(status=200)
+        return Response(status=204)
     except ServerAlreadyRunningError:
         abort(409, 'Server is already running')
 
@@ -117,12 +116,13 @@ def turn_on(jvm_args):
 def turn_off():
     """
     Turns the server off.
+
     Returns a HTTP 409 Conflict response if the server is not running.
 
-    :return: flask.Response
+    :return flask.Response: HTTP 204 No Content
     """
     try:
         server.stop()
-        return Response(status=200)
+        return Response(status=204)
     except ServerNotRunningError:
         abort(409, 'Server is not running')
