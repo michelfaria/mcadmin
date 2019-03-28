@@ -9,6 +9,12 @@ from mcadmin.server.server import SERVER_DIR
 FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
 
 
+def exists():
+    """
+    :return: True if the server.properties file exists.
+    """
+    return os.path.exists(FILEPATH)
+
 def read():
     """
     :return: The content of the server.properties file.

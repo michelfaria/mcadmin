@@ -2,6 +2,7 @@
 
 {% extends "_panel_page.html" %}
 {% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
 
 {% block title %}
     Configuration
@@ -17,5 +18,9 @@
     <div class="mc-card">
         {{ list_flashed_messages() }}
         <span>CONFIGURATION</span>
+        <form method="post">
+            {{ render_field(form.properties) }}
+            {{ form.csrf_token }}
+        </form>
     </div>
 {% endblock %}

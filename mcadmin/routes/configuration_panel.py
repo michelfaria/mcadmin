@@ -17,12 +17,6 @@ def configuration_panel():
         flash('Server properties updated.')
         return redirect(url_for('configuration_panel'))
     else:
-        modifiable = False
-        form.properties = ''
-        try:
-            properties = server_properties.read()
-            form.properties = properties
-            modifiable = True
-        except IOError:
-            flash('Properties file not available. Try starting the server for the first time.')
-        return render_template('configuration_panel.html', form=form, modifiable=modifiable)
+        exists = server_properties.exists()
+        form.properties.data = server_properties.read() if exists else ''
+        return render_template('configuration_panel.html', form=form, exists=exists)
