@@ -1,7 +1,7 @@
 {# mcadmin/templates/status_panel.html #}
 
 {% extends "_panel_page.html" %}
-
+{% from "_utilmacros.html" import list_flashed_messages %}
 
 {% block title %}Status{% endblock %}
 
@@ -14,6 +14,7 @@
 
 {% block content %}
     {{ super() }}
+    {{ list_flashed_messages() }}
     <div class="mc-card status-card">
         <p>Server status</p>
 

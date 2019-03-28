@@ -1,36 +1,19 @@
 {# mcadmin/templates/login.html #}
 
-{% extends "_layout.html" %}
+{% extends "_form_page.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
 
 {% block title %}
     Login
 {% endblock %}
 
-{% block head %}
-    {{ super() }}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/form_page.css') }}"/>
-{% endblock %}
-
-{% block content %}
-    <div class="mc-card form-card growing">
-        <form class="mc-fade-in" method="post">
-            <h2>Login</h2>
-
-            {% with messages = get_flashed_messages() %}
-                {% if messages %}
-                    <ul>
-                        {% for message in messages %}
-                            <li>{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
-
-            {% from "_formhelpers.html" import render_field %}
-            {{ render_field(form.password) }}
-            {{ form.csrf_token }}
-
-            <button class="mc-grn-btn" type="submit">Log in</button>
-        </form>
-    </div>
+{% block form %}
+    <form class="mc-fade-in" method="post">
+        <h2>Login</h2>
+        {{ list_flashed_messages() }}
+        {{ render_field(form.password) }}
+        {{ form.csrf_token }}
+        <button class="mc-grn-btn" type="submit">Log in</button>
+    </form>
 {% endblock %}

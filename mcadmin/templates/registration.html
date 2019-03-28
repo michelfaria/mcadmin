@@ -1,25 +1,17 @@
 {# mcadmin/templates/registration.html #}
-{% extends "_layout.html" %}
+{% extends "_form_page.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
 
 {% block title %}Registration{% endblock %}
 
-{% block head %}
-    {{ super() }}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/form_page.css') }}">
-{% endblock %}
-
-{% block content %}
-    <div class="mc-card form-card growing">
-        <form class="mc-fade-in" method="post">
-            <h2>Register</h2>
-
-            {% from "_formhelpers.html" import render_field %}
-
-            {{ render_field(form.password) }}
-            {{ render_field(form.confirm_password) }}
-            {{ form.csrf_token }}
-
-            <input type="submit" class="mc-grn-btn" value="Submit">
-        </form>
-    </div>
+{% block form %}
+    <form class="mc-fade-in" method="post">
+        <h2>Register</h2>
+        {{ list_flashed_messages }}
+        {{ render_field(form.password) }}
+        {{ render_field(form.confirm_password) }}
+        {{ form.csrf_token }}
+        <input type="submit" class="mc-grn-btn" value="Submit">
+    </form>
 {% endblock %}

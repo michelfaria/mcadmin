@@ -1,6 +1,7 @@
 {# mcadmin/templates/console_panel.html #}
 
 {% extends "_panel_page.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
 
 {% block title %}Console{% endblock %}
 
@@ -11,6 +12,7 @@
 
 {% block content %}
     {{ super() }}
+    {{ list_flashed_messages() }}
     <div class="mc-card console-container">
         <!--suppress HtmlFormInputWithoutLabel -->
         <textarea id="console-box" class="console-box" readonly>

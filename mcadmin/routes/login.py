@@ -37,7 +37,6 @@ def login():
         elif not login_user(user, remember=True):
             flash('Unable to log you in')
         else:
-            flash('Logged in')
             return redirect('/')
 
     return render_template('login.html', form=form)

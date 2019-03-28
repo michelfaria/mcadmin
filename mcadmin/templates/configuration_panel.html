@@ -1,6 +1,7 @@
 {# mcadmin/templates/configuration_panel.html #}
 
 {% extends "_panel_page.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
 
 {% block title %}
     Configuration
@@ -14,6 +15,7 @@
 {% block content %}
     {{ super() }}
     <div class="mc-card">
+        {{ list_flashed_messages() }}
         <span>CONFIGURATION</span>
     </div>
 {% endblock %}
