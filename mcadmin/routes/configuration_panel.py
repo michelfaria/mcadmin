@@ -19,4 +19,6 @@ def configuration_panel():
     else:
         exists = server_properties.exists()
         form.properties.data = server_properties.read() if exists else ''
-        return render_template('configuration_panel.html', form=form, exists=exists)
+        return render_template('configuration_panel.html',
+                               form=form,
+                               exists=exists)

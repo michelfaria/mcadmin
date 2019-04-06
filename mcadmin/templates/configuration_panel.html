@@ -10,13 +10,15 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/configuration_panel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/configuration_page.css') }}">
+    <meta id="server_properties_modifiable" data-value="{{  }}">
 {% endblock %}
 
 {% block content %}
     {{ super() }}
     <div class="mc-card">
         {{ list_flashed_messages() }}
+<<<<<<< HEAD
         <div class="properties-editor">
             <span>CONFIGURATION</span>
             <form method="post">
@@ -25,5 +27,13 @@
             </form>
             <button class="mc-grn-btn" type="submit">Update</button>
         </div>
+=======
+        <span>CONFIGURATION</span>
+        <form method="post">
+            {{ render_field(form.properties) }}
+            {{ form.csrf_token }}
+            <button type="submit">Save</button>
+        </form>
+>>>>>>> 35c75bd06d3d44e9a9af7a4d08f0c34ab182dc2a
     </div>
 {% endblock %}
