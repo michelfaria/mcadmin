@@ -1,4 +1,3 @@
-# mcadmin/routes/console_panel.py
 import logging
 
 from flask import render_template, Response, request, abort
@@ -39,7 +38,7 @@ def console_panel():
             - "input_line" is over MAX_INPUT_LENGTH characters long
     """
     if request.method == 'GET':
-        return render_template('console_panel.html', console_history=''.join(console_output))
+        return render_template('panel/console.html', console_history=''.join(console_output))
     else:
         assert request.method == 'POST'
         require_json()

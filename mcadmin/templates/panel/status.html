@@ -1,6 +1,4 @@
-{# mcadmin/templates/status_panel.html #}
-
-{% extends "_panel_page.html" %}
+{% extends "panel/_template.html" %}
 {% from "_utilmacros.html" import list_flashed_messages %}
 
 {% block title %}Status{% endblock %}
@@ -8,7 +6,7 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/status_panel.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/status.css') }}"/>
 {% endblock %}
 
 
@@ -54,5 +52,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript" src="{{ url_for('static', filename='js/status_panel.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/panel/status.js') }}"></script>
 {% endblock %}

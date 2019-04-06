@@ -1,5 +1,3 @@
-# mcadmin/server/server_repo.py
-
 import logging
 import os
 import re

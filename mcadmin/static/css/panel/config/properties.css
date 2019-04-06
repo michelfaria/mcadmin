@@ -1,0 +1,9 @@
+.properties-editor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 500px;
+  height: 500px;
+  max-width: 90vw;
+  max-height: 90vw; }

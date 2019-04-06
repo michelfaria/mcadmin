@@ -1,4 +1,3 @@
-# mcadmin/routes/index.py
 import logging
 
 from flask import redirect, url_for
@@ -23,4 +22,4 @@ def index():
     if not is_registered():
         return redirect(url_for('register'))
     else:
-        return redirect(url_for('console_panel'))
+        return redirect(url_for('status_panel'))

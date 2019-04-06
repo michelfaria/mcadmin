@@ -1,13 +1,11 @@
-{# mcadmin/templates/console_panel.html #}
-
-{% extends "_panel_page.html" %}
+{% extends "panel/_template.html" %}
 {% from "_utilmacros.html" import list_flashed_messages %}
 
 {% block title %}Console{% endblock %}
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/console_panel.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/console.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -24,5 +22,5 @@
 
 {% block scripts %}
     {{ super() }}
-    <script type="text/javascript" src="{{ url_for('static', filename='js/console_panel.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/panel/console.js') }}"></script>
 {% endblock %}

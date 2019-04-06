@@ -1,0 +1,18 @@
+{% extends "panel/config/_template.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/config/properties.css') }}">
+{% endblock %}
+
+{% block in_card %}
+    {{ super() }}
+    {{ list_flashed_messages() }}
+    <form method="post">
+        {{ render_field(form.properties) }}
+        {{ form.csrf_token }}
+        <button type="submit" class="mc-grn-btn">Submit</button>
+    </form>
+{% endblock %}

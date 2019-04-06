@@ -1,0 +1,19 @@
+{% extends "panel/_template.html" %}
+
+{% block title %}
+    Configuration
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="mc-card">
+        <h1>Configuration: {{ cfg_name }}</h1>
+        <span>#TOOLBAR-WILL-GO-HERE-SOON#</span>
+        {% block in_card %}
+        {% endblock %}
+    </div>
+{% endblock %}

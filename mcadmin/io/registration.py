@@ -1,5 +1,3 @@
-# mcadmin/io/registration.py
-
 import os.path
 
 AUTH_FILE = 'credentials.bfe'

@@ -1,5 +1,3 @@
-{# mcadmin/templates/_panel_page.html #}
-
 {% extends "_layout.html" %}
 
 {% macro toolbar_entry(icon, label, url) %}
@@ -18,14 +16,14 @@
         {{ toolbar_entry("img/icons/lamp.png", "Server Status", url_for('status_panel')) }}
         {{ toolbar_entry("img/icons/command_line.png", "Console", url_for('console_panel')) }}
         {{ toolbar_entry("img/icons/enchanting_table.png", "Configuration", url_for('configuration_panel')) }}
-        {{ toolbar_entry("img/icons/paper.png", "Whitelist") }}
+        {{ toolbar_entry("img/icons/paper.png", "Whitelist", url_for('whitelist_panel')) }}
         {{ toolbar_entry("img/icons/steve_block.png", "Banned Players") }}
     </div>
 {% endmacro %}
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/styles.css') }}">
 {% endblock %}
 
 {% block content %}

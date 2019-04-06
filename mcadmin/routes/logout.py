@@ -1,4 +1,3 @@
-# mcadmin/routes/logout.py
 from flask_login import login_required, logout_user
 from werkzeug.utils import redirect
 

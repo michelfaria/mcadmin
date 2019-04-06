@@ -1,9 +1,7 @@
-# mcadmin/routes/login.py
-
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user
 
-from mcadmin.forms.login_form import LoginForm
+from mcadmin.forms.login import LoginForm
 from mcadmin.io.registration import password_matches, is_registered
 from mcadmin.main import app
 from mcadmin.model.user import User

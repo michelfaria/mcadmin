@@ -1,13 +1,11 @@
-# mcadmin/server/server.py
-
-import threading
 import atexit
+import collections
 import glob
 import logging
 import os
 import signal
+import threading
 import time
-import collections
 from enum import Enum
 from subprocess import Popen, PIPE
 

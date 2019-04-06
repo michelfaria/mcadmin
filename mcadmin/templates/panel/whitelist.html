@@ -1,0 +1,14 @@
+{% extends "panel/_template.html" %}
+{% from "_utilmacros.html" import list_flashed_messages %}
+
+{% block title %}Whitelist{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/whitelist.css') }}">
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <h1>Whitelist</h1>
+{% endblock %}

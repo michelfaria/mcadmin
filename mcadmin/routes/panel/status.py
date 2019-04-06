@@ -1,15 +1,14 @@
-# mcadmin/routes/status_panel.py
 import json
 import logging
 
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
-from mcadmin.util import require_json
 from mcadmin.main import app
 from mcadmin.server import server
 from mcadmin.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
     SERVER_STATUS_CHANGE
+from mcadmin.util import require_json
 
 LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ def status_panel():
 
     """
     if request.method == 'GET':
-        return render_template('status_panel.html')
+        return render_template('panel/status.html')
     else:
         assert request.method == 'POST'
         require_json()
