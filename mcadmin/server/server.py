@@ -25,11 +25,11 @@ SERVER_STATUS_CHANGE = threading.Condition()
 CONSOLE_OUTPUT_COND = threading.Condition()
 
 # Console output buffer that will be sent to the client when they open the console page
-console_output = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
+CONSOLE_OUTPUT = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
 
 # Java Server Process Handle
 proc = None  # type: Popen
-proc_lock = threading.RLock()
+PROC_LOCK = threading.RLock()
 
 # Create server files directory if it does not exist.
 if not os.path.exists(SERVER_DIR):
@@ -73,7 +73,7 @@ def server_status():
         ServerStatus.CLOSED: If server process is referenced but has return code
         ServerStatus.DISABLED: If server process is not referenced
     """
-    with proc_lock:
+    with PROC_LOCK:
         if proc is None:
             return ServerStatus.DISABLED
         return_code = proc.poll()
@@ -107,7 +107,7 @@ def stop():
     """
     global proc
 
-    with proc_lock:
+    with PROC_LOCK:
         status = server_status()
 
         if status == ServerStatus.RUNNING:
@@ -228,7 +228,7 @@ def start(server_jar_name=None, jvm_params=''):
     """
     global proc
 
-    with proc_lock:
+    with PROC_LOCK:
         if is_server_running():
             raise ServerAlreadyRunningError('Server is already running')
 
@@ -285,7 +285,7 @@ def _start_console_thread():
 
             if line != b'':  # Sometimes it reads this and I don't want it
                 encoded = line.decode('utf-8')
-                console_output.append(encoded)
+                CONSOLE_OUTPUT.append(encoded)
                 LOGGER.debug(encoded)
 
                 with CONSOLE_OUTPUT_COND:
@@ -321,7 +321,7 @@ def input_line(text):
     :param text: Input to send
     :raise ServerNotRunningError: if the server is not running
     """
-    with proc_lock:
+    with PROC_LOCK:
         _require_server()
         if isinstance(text, str):
             text = text.encode()

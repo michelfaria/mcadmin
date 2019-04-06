@@ -6,7 +6,7 @@ from flask_login import login_required
 from mcadmin.util import require_json
 from mcadmin.main import app
 from mcadmin.server import server
-from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, console_output, ServerNotRunningError
+from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, CONSOLE_OUTPUT, ServerNotRunningError
 
 LOGGER = logging.getLogger(__name__)
 SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
@@ -38,7 +38,7 @@ def console_panel():
             - "input_line" is over MAX_INPUT_LENGTH characters long
     """
     if request.method == 'GET':
-        return render_template('panel/console.html', console_history=''.join(console_output))
+        return render_template('panel/console.html', console_history=''.join(CONSOLE_OUTPUT))
     else:
         assert request.method == 'POST'
         require_json()
@@ -80,7 +80,7 @@ def console_panel_stream():
                         # Do not attempt to send any data in first loop iteration.
                         # This is because there is usually no data to send.
                         if not is_first_iter:
-                            yield 'data: ' + str(console_output[-1]) + '\n\n'
+                            yield 'data: ' + str(CONSOLE_OUTPUT[-1]) + '\n\n'
                         CONSOLE_OUTPUT_COND.wait()
                     else:
                         yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
