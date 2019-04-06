@@ -1,0 +1,12 @@
+// mcadmin/assets/scss/configuration_panel.scss
+@import "mixins";
+
+.properties-editor {
+  @include center-flex;
+
+  flex-direction: column;
+  width: 500px;
+  height: 500px;
+  max-width: 90vw;
+  max-height: 90vw;
+}

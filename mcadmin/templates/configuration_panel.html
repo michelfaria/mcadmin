@@ -10,17 +10,20 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/configuration_page.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/configuration_panel.css') }}">
 {% endblock %}
 
 {% block content %}
     {{ super() }}
     <div class="mc-card">
         {{ list_flashed_messages() }}
-        <span>CONFIGURATION</span>
-        <form method="post">
-            {{ render_field(form.properties) }}
-            {{ form.csrf_token }}
-        </form>
+        <div class="properties-editor">
+            <span>CONFIGURATION</span>
+            <form method="post">
+                {{ render_field(form.properties) }}
+                {{ form.csrf_token }}
+            </form>
+            <button class="mc-grn-btn" type="submit">Update</button>
+        </div>
     </div>
 {% endblock %}
