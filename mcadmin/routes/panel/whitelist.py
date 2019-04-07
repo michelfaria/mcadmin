@@ -8,7 +8,7 @@ from mcadmin.io.whitelist import whitelist_io
 from mcadmin.main import app
 
 
-@app.route('/panel/whitelist', methods=['GET', 'POST'])
+@app.route('/panel/whitelist', methods=['GET'])
 @login_required
 def whitelist_panel():
     form = WhitelistForm()
