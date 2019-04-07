@@ -1,20 +1,28 @@
 from flask import render_template, abort, Response
 from flask_login import login_required
 
+from mcadmin.forms.whitelist_operation import WhitelistOperationForm, OPERATION_ADD, OPERATION_REMOVE
 from mcadmin.io.mc_profile import ProfileAPIError
 from mcadmin.main import app
 from mcadmin.io import mc_profile
 from mcadmin.io.files import WHITELIST_FILE, EntryNotFound
 
 
-@app.route('/panel/whitelist')
+@app.route('/panel/whitelist', methods=['GET', 'POST'])
 @login_required
 def whitelist_panel():
+    form = WhitelistOperationForm()
+
+    if form.validate_on_submit():
+        if form.operation.data == OPERATION_ADD:
+            return whitelist_add(form.name.data)
+        else:
+            assert form.operation.data == OPERATION_REMOVE
+            return whitelist_remove(form.name.data)
+
     return render_template('panel/whitelist.html')
 
 
-@app.route('/panel/whitelist/add/<username>')
-@login_required
 def whitelist_add(username):
     uuid = None
     try:
@@ -29,8 +37,6 @@ def whitelist_add(username):
     return '', 204
 
 
-@app.route('/panel/whitelist/remove/<username>')
-@login_required
 def whitelist_remove(username):
     try:
         WHITELIST_FILE.remove(username)
