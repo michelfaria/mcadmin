@@ -1,22 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, validators, SelectField
+from wtforms import StringField, validators
 
 OPERATION_ADD = 'add',
 OPERATION_REMOVE = 'remove'
 
 
-class WhitelistOperationForm(FlaskForm):
-    operation = SelectField(
-        'Operation',
-        choices=[
-            ('Add', OPERATION_ADD),
-            ('Remove', OPERATION_REMOVE)
-        ],
-        validators=[
-            validators.DataRequired('Please enter an operation.')
-        ]
-    )
-
+class WhitelistForm(FlaskForm):
     name = StringField(
         'Name',
         validators=[

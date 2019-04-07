@@ -16,9 +16,24 @@
 
         {{ list_flashed_messages() }}
 
-        <form method="post">
-            {{ render_field(form.operation) }}
+        <h1>Add</h1>
+        <form action="{{ url_for('whitelist_add') }}" method="post">
             {{ render_field(form.name) }}
+            {{ form.csrf_token }}
+            <button type="submit" class="mc-grn-btn">Submit</button>
         </form>
+
+        <h1>Remove</h1>
+        <form action="{{ url_for('whitelist_remove') }}" method="post">
+            {{ render_field(form.name) }}
+            {{ form.csrf_token }}
+            <button type="submit" class="mc-grn-btn">Submit</button>
+        </form>
+
+        <ul>
+            {% for user in users %}
+                <li>{{ user.name }}</li>
+            {% endfor %}
+        </ul>
     </div>
 {% endblock %}

@@ -8,6 +8,8 @@ import requests
 
 from mcadmin.exception import PublicError
 
+ID = 'id'
+NAME = 'name'
 MOJANG_USER_API = 'https://api.mojang.com/users/profiles/minecraft/'
 
 
@@ -21,6 +23,28 @@ class UUIDNotFoundError(PublicError):
     """
     Raised when the UUID of a looked-up user was not found.
     """
+
+
+def _format_mojang_uuid(uuid_):
+    """
+    Formats a non-hyphenated UUID into a whitelist-compatible UUID
+
+    :param str uuid_: uuid to format
+    :return str: formatted uuid
+
+    Example:
+    >>> _format_mojang_uuid('1449a8a244d940ebacf551b88ae95dee')
+    '1449a8a2-44d9-40eb-acf5-51b88ae95dee'
+
+    Must have 32 characters:
+    >>> _format_mojang_uuid('1')
+    Traceback (most recent call last):
+        ...
+    ValueError: Expected UUID to have 32 characters
+    """
+    if len(uuid_) != 32:
+        raise ValueError('Expected UUID to have 32 characters')
+    return uuid_[:8] + '-' + uuid_[8:12] + '-' + uuid_[12:16] + '-' + uuid_[16:20] + '-' + uuid_[20:]
 
 
 def uuid(username):
@@ -39,15 +63,16 @@ def uuid(username):
         raise UUIDNotFoundError('No UUID found for %s' % username)
 
     elif response.status_code is 200:
-        obj = json.loads(response.content)
-        if 'name' not in obj or 'id' not in obj:
+        response = json.loads(response.content)
+
+        if NAME not in response or ID not in response:
             raise ProfileAPIError('Received erroneous response from Mojang profile API: %s' % response.content)
-        elif obj['name'].lower() != username:
+        elif response[NAME].casefold() != username.casefold():
             raise ProfileAPIError(
                 'Mojang API may be problematic: Requested profile for %s but got username %s. The entire response '
-                'was: %s' % (username, obj['name'], response.content))
+                'was: %s' % (username, response[NAME], response.content))
         else:
-            return obj['id']
+            return _format_mojang_uuid(response[ID])
 
     else:
         raise ValueError('Got response status %d but expected 200' % response.status_code)
