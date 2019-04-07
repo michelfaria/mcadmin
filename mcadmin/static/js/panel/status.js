@@ -28,8 +28,6 @@ function initEventSource() {
     eventSource.onmessage = function (msg) {
         var data = JSON.parse(msg.data);
 
-        console.log(JSON.stringify(data)); // TODO: Remove this
-
         var isServerRunning = data['is_server_running'];
         var uptime = data['uptime'];
         var peakActivity = data['peak_activity'];

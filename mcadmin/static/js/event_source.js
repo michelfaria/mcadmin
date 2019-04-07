@@ -1,4 +1,3 @@
-// mcadmin/static/js/event_source.js
 //
 // EventSource Polyfill
 //
