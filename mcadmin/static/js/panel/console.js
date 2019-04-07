@@ -55,7 +55,7 @@ function initConsoleInput() {
                 }
             };
 
-            xhr.send(JSON.stringify({ 'input_line': consoleInput.value }));
+            xhr.send(JSON.stringify({'input_line': consoleInput.value}));
             consoleInput.value = '';
             return false;
         }

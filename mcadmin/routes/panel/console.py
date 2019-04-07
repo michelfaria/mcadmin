@@ -3,10 +3,10 @@ import logging
 from flask import render_template, Response, request, abort
 from flask_login import login_required
 
-from mcadmin.util import require_json
 from mcadmin.main import app
 from mcadmin.server import server
 from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, CONSOLE_OUTPUT, ServerNotRunningError
+from mcadmin.util import require_json
 
 LOGGER = logging.getLogger(__name__)
 SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'

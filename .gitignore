@@ -9,5 +9,5 @@ __pycache__/
 credentials.bfe
 server_files/
 server_list.yml
-/mcadmin/static/css/*.css
+/mcadmin/static/css/**
 

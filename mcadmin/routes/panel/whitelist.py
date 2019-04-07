@@ -1,11 +1,11 @@
-from flask import render_template, abort, Response
+from flask import render_template, abort
 from flask_login import login_required
 
+from mcadmin.io import mc_profile
 from mcadmin.forms.whitelist_operation import WhitelistOperationForm, OPERATION_ADD, OPERATION_REMOVE
+from mcadmin.io.files import WHITELIST_FILE, EntryNotFound
 from mcadmin.io.mc_profile import ProfileAPIError
 from mcadmin.main import app
-from mcadmin.io import mc_profile
-from mcadmin.io.files import WHITELIST_FILE, EntryNotFound
 
 
 @app.route('/panel/whitelist', methods=['GET', 'POST'])

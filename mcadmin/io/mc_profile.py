@@ -1,9 +1,10 @@
 """
 Utility for getting information about a Minecraft user
 """
-import requests
 import json
 from urllib.parse import urljoin
+
+import requests
 
 MOJANG_USER_API = 'https://api.mojang.com/users/profiles/minecraft/'
 

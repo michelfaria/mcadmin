@@ -1,4 +1,3 @@
-// mcadmin/static/js/event_source.js
 //
 // EventSource Polyfill
 //
@@ -125,8 +124,7 @@
             } catch (e) { // in an attempt to silence the errors
                 eventsource.dispatchEvent('error', {type: 'error', data: e.message}); // ???
             }
-        };
-
+        }
         poll(); // init now
     };
 
