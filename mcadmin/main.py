@@ -5,6 +5,7 @@ import os.path
 from flask import Flask
 from flask_login import LoginManager
 from flask_scss import Scss
+
 from mcadmin.model.user import User
 
 logging.basicConfig(level=logging.DEBUG)

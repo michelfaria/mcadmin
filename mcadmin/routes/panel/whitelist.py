@@ -1,10 +1,10 @@
 from flask import render_template, abort, Response
 from flask_login import login_required
 
-from mcadmin.io.mc_profile import ProfileAPIError
-from mcadmin.main import app
 from mcadmin.io import mc_profile
 from mcadmin.io.files import WHITELIST_FILE, EntryNotFound
+from mcadmin.io.mc_profile import ProfileAPIError
+from mcadmin.main import app
 
 
 @app.route('/panel/whitelist')

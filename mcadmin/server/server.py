@@ -300,6 +300,7 @@ def _start_watchdog_thread():
 
     :raise ValueError: If `watchdog_thread` already has an assignment
     """
+
     def _watchdog_worker():
         """
         Will officially stop the server whenever it sees that the process has ended, until `proc` is de-referenced.

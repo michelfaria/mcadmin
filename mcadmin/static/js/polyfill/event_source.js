@@ -124,8 +124,7 @@
             } catch (e) { // in an attempt to silence the errors
                 eventsource.dispatchEvent('error', {type: 'error', data: e.message}); // ???
             }
-        };
-
+        }
         poll(); // init now
     };
 
