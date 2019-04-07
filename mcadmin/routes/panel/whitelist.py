@@ -1,10 +1,10 @@
-from flask import render_template, abort
+from flask import render_template, flash
 from flask_login import login_required
 
-from mcadmin.io import mc_profile
+from mcadmin.exception import PublicError
 from mcadmin.forms.whitelist_operation import WhitelistOperationForm, OPERATION_ADD, OPERATION_REMOVE
-from mcadmin.io.files import WHITELIST_FILE, EntryNotFound
-from mcadmin.io.mc_profile import ProfileAPIError
+from mcadmin.io import mc_profile
+from mcadmin.io.whitelist import whitelist_io
 from mcadmin.main import app
 
 
@@ -14,33 +14,40 @@ def whitelist_panel():
     form = WhitelistOperationForm()
 
     if form.validate_on_submit():
-        if form.operation.data == OPERATION_ADD:
-            return whitelist_add(form.name.data)
-        else:
-            assert form.operation.data == OPERATION_REMOVE
-            return whitelist_remove(form.name.data)
+        name = form.name.data
+
+        try:
+            if form.operation.data == OPERATION_ADD:
+                whitelist_add(name)
+                flash('%s added to whitelist' % name)
+            elif form.operation.data == OPERATION_REMOVE:
+                whitelist_remove(name)
+                flash('%s removed from whitelist' % name)
+            else:
+                # Should never get here if validation works properly
+                raise RuntimeError('Unknown operation')
+        except PublicError as e:
+            flash('Error: ' + str(e))
 
     return render_template('panel/whitelist.html')
 
 
 def whitelist_add(username):
-    uuid = None
-    try:
-        uuid = mc_profile.uuid(username)
-    except ProfileAPIError as e:
-        abort(502, str(e))
+    """
+    Add a user to the whitelist.
 
-    if uuid is None:
-        abort(404, 'User %s not found' % username)
-
-    WHITELIST_FILE.add(username, uuid)
-    return '', 204
+    :param str username: Name of the user to add to the whitelist
+    :raises PublicError:
+    """
+    uuid = mc_profile.uuid(username)
+    whitelist_io.add(username, uuid)
 
 
 def whitelist_remove(username):
-    try:
-        WHITELIST_FILE.remove(username)
-    except EntryNotFound:
-        abort(404, 'User %s was not found in the whitelist' % username)
+    """
+    Remove a user from the whitelist.
 
-    return '', 204
+    :param username: Name of the user to remove from the whitelist
+    :raises PublicError:
+    """
+    whitelist_io.remove(username)

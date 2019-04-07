@@ -40,21 +40,18 @@ class TooManyMatchesError(Exception):
     """
     For when a lookup returns more than one match when just one is expected.
     """
-    pass
 
 
 class ServerAlreadyRunningError(Exception):
     """
     Raised when trying to start the server when it is already running.
     """
-    pass
 
 
 class ServerNotRunningError(Exception):
     """
     Raised when an action that requires a running server is performed without the server running.
     """
-    pass
 
 
 class ServerStatus(Enum):

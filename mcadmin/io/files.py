@@ -4,19 +4,24 @@ This module concerns I/O operations on the server.properties file of Minecraft S
 import json
 import os
 
+from mcadmin.exception import PublicError
 from mcadmin.server.server import SERVER_DIR
 
 SERVER_PROPERTIES_FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
-WHITELIST_FILEPATH = os.path.join(SERVER_DIR, 'whitelist.json')
 BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
 BANNED_IPS_FILEPATH = os.path.join(SERVER_DIR, 'banned-ips.json')
 
 
-class EntryNotFound(Exception):
+class EntryConflictError(PublicError):
+    """
+    Raised when it is made an attempt to insert a duplicate element into an entry set where duplicates are not allowed.
+    """
+
+
+class EntryNotFoundError(PublicError):
     """
     Raised when it is made an attempt to operate on an non-existing entry of the whitelist.
     """
-    pass
 
 
 class _FileIO:
@@ -63,51 +68,6 @@ class _JsonIO(_FileIO):
         return super().write(parsed)
 
 
-class _WhitelistIO(_JsonIO):
-
-    def __init__(self):
-        super().__init__(WHITELIST_FILEPATH)
-
-    def add(self, name, uuid):
-        """
-        Add a user to the whitelist.
-
-        :param name: Name of the user
-        :type name: str
-        :param uuid: UUID of the user
-        :type uuid: str
-        """
-        list_ = self.read()
-        list_.append({
-            'uuid': uuid,
-            'name': name
-        })
-        self.write(list_)
-
-    def remove(self, name):
-        """
-        Removes a name from the whitelist.
-
-        :param name: Name to remove
-        :rtype name: str
-        :raises EntryNotFound: If an entry by the given name does not exist
-        """
-        list_ = self.read()
-
-        found = False
-        for i, x in enumerate(list_):
-            if x['name'] == name:
-                found = True
-                del list_[i]
-                break
-
-        if not found:
-            raise EntryNotFound('Not found in whitelist: %s' % name)
-
-        self.write(list_)
-
-
-SERVER_PROPERTIES_FILE = _FileIO(SERVER_PROPERTIES_FILEPATH)
-BANNED_PLAYERS_FILE = _FileIO(BANNED_PLAYERS_FILEPATH)
-BANNED_IPS_FILE = _FileIO(BANNED_IPS_FILEPATH)
-WHITELIST_FILE = _WhitelistIO()
+server_properties_io = _FileIO(SERVER_PROPERTIES_FILEPATH)
+banned_players_io = _FileIO(BANNED_PLAYERS_FILEPATH)
+banned_ips_io = _FileIO(BANNED_IPS_FILEPATH)

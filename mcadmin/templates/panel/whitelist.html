@@ -1,5 +1,6 @@
 {% extends "panel/_template.html" %}
 {% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
 
 {% block title %}Whitelist{% endblock %}
 
@@ -13,6 +14,11 @@
     <div class="mc-card">
         <h1>Whitelist</h1>
 
+        {{ list_flashed_messages() }}
 
+        <form method="post">
+            {{ render_field(form.operation) }}
+            {{ render_field(form.name) }}
+        </form>
     </div>
 {% endblock %}

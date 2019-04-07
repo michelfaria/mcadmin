@@ -6,32 +6,40 @@ from urllib.parse import urljoin
 
 import requests
 
+from mcadmin.exception import PublicError
+
 MOJANG_USER_API = 'https://api.mojang.com/users/profiles/minecraft/'
 
 
-class ProfileAPIError(BaseException):
+class ProfileAPIError(PublicError):
     """
-    Raise when the Mojang profile API responds erroneously.
+    Raised when the Mojang profile API responds erroneously.
     """
-    pass
+
+
+class UUIDNotFoundError(PublicError):
+    """
+    Raised when the UUID of a looked-up user was not found.
+    """
 
 
 def uuid(username):
     """
     Returns the UUID of a Minecraft username.
 
-    :param username: Username to look up the UUID for
-    :type username: str
-    :return: UUID, or None if the username was not found
-    :rtype: str | None
+    :param str username: Username to look up the UUID for
+    :return str: UUID of the user
 
-    :raise ProfileAPIError: If the Mojang API responds erroneously
+    :raises ProfileAPIError: If the Mojang API responds erroneously
+    :raises UUIDNotFoundError: If UUID for username was not found
     """
     response = requests.get(urljoin(MOJANG_USER_API, username))
 
-    if response.status_code is 200:
-        obj = json.loads(response.content)
+    if response.status_code is 204:
+        raise UUIDNotFoundError('No UUID found for %s' % username)
 
+    elif response.status_code is 200:
+        obj = json.loads(response.content)
         if 'name' not in obj or 'id' not in obj:
             raise ProfileAPIError('Received erroneous response from Mojang profile API: %s' % response.content)
         elif obj['name'].lower() != username:
@@ -40,5 +48,6 @@ def uuid(username):
                 'was: %s' % (username, obj['name'], response.content))
         else:
             return obj['id']
+
     else:
-        return None
+        raise ValueError('Got response status %d but expected 200' % response.status_code)
