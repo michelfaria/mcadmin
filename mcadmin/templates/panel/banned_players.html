@@ -1,0 +1,17 @@
+{% extends "panel/_template.html" %}
+
+{% block title %}
+    Banned Players
+{% endblock %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/banned_players.css') }}">
+{% endblock %}
+
+{% block content %}
+    {{ super() }}
+    <div class="mc-card">
+        <h1>Banned Players</h1>
+    </div>
+{% endblock %}

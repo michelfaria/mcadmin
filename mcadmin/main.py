@@ -20,7 +20,7 @@ Scss(app)
 # noinspection PyUnresolvedReferences
 from mcadmin.routes import index, register, login, logout
 # noinspection PyUnresolvedReferences
-from mcadmin.routes.panel import configuration, console, status, whitelist
+from mcadmin.routes.panel import configuration, console, status, whitelist, banned_players
 
 login_manager.login_view = '/login'
 login_manager.login_message = 'Please log in'

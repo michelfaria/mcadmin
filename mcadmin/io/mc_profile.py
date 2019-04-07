@@ -25,11 +25,11 @@ class UUIDNotFoundError(PublicError):
     """
 
 
-def _format_mojang_uuid(uuid_):
+def _format_mojang_uuid(uuid):
     """
     Formats a non-hyphenated UUID into a whitelist-compatible UUID
 
-    :param str uuid_: uuid to format
+    :param str uuid: uuid to format
     :return str: formatted uuid
 
     Example:
@@ -42,12 +42,12 @@ def _format_mojang_uuid(uuid_):
         ...
     ValueError: Expected UUID to have 32 characters
     """
-    if len(uuid_) != 32:
+    if len(uuid) != 32:
         raise ValueError('Expected UUID to have 32 characters')
-    return uuid_[:8] + '-' + uuid_[8:12] + '-' + uuid_[12:16] + '-' + uuid_[16:20] + '-' + uuid_[20:]
+    return uuid[:8] + '-' + uuid[8:12] + '-' + uuid[12:16] + '-' + uuid[16:20] + '-' + uuid[20:]
 
 
-def uuid(username):
+def mc_uuid(username):
     """
     Returns the UUID of a Minecraft username.
 

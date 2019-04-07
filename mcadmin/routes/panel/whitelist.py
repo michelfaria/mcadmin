@@ -2,13 +2,13 @@ from flask import render_template, flash, redirect, url_for
 from flask_login import login_required
 
 from mcadmin.exception import PublicError
-from mcadmin.forms.whitelist_operation import WhitelistForm, OPERATION_ADD, OPERATION_REMOVE
+from mcadmin.forms.whitelist_operation import WhitelistForm
 from mcadmin.io import mc_profile
 from mcadmin.io.whitelist import whitelist_io
 from mcadmin.main import app
 
 
-@app.route('/panel/whitelist', methods=['GET'])
+@app.route('/panel/whitelist')
 @login_required
 def whitelist_panel():
     form = WhitelistForm()
@@ -24,7 +24,7 @@ def whitelist_add():
     if form.validate_on_submit():
         name = form.name.data
         try:
-            uuid = mc_profile.uuid(name)
+            uuid = mc_profile.mc_uuid(name)
             whitelist_io.add(name, uuid)
             flash('%s added to whitelist' % name)
         except PublicError as e:

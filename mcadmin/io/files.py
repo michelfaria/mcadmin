@@ -8,7 +8,6 @@ from mcadmin.exception import PublicError
 from mcadmin.server.server import SERVER_DIR
 
 SERVER_PROPERTIES_FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
-BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
 BANNED_IPS_FILEPATH = os.path.join(SERVER_DIR, 'banned-ips.json')
 
 
@@ -24,7 +23,7 @@ class EntryNotFoundError(PublicError):
     """
 
 
-class _FileIO:
+class FileIO:
     """
     Utility class for performing basic operations on files.
     """
@@ -51,7 +50,7 @@ class _FileIO:
             f.write(content)
 
 
-class _JsonIO(_FileIO):
+class JsonIO(FileIO):
     """
     Perform I/O operations on JSON files with automatic serialization and deserialization of JSON objects.
     """
@@ -68,6 +67,5 @@ class _JsonIO(_FileIO):
         return super().write(parsed)
 
 
-server_properties_io = _FileIO(SERVER_PROPERTIES_FILEPATH)
-banned_players_io = _FileIO(BANNED_PLAYERS_FILEPATH)
-banned_ips_io = _FileIO(BANNED_IPS_FILEPATH)
+server_properties_io = FileIO(SERVER_PROPERTIES_FILEPATH)
+banned_ips_io = FileIO(BANNED_IPS_FILEPATH)
