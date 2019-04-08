@@ -4,9 +4,7 @@ import logging
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
-from mcadmin.io.server import server
-from mcadmin.io.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
-    SERVER_STATUS_CHANGE
+from mcadmin.io.server.server import SERVER, ServerAlreadyRunningError, ServerNotRunningError
 from mcadmin.main import app
 from mcadmin.util import require_json
 
@@ -83,13 +81,13 @@ def status_panel_stream():
         try:
             while True:
                 msg = {
-                    'is_server_running': is_server_running(),
+                    'is_server_running': SERVER.is_running(),
                     'uptime': 0,
                     'peak_activity': 0
                 }
                 yield 'data: ' + json.dumps(msg) + '\n\n'
-                with SERVER_STATUS_CHANGE:
-                    SERVER_STATUS_CHANGE.wait()
+                with SERVER.STATUS_CHANGE:
+                    SERVER.STATUS_CHANGE.wait()
         except GeneratorExit as e:
             _LOGGER.debug('GeneratorExit status_panel_stream: ' + str(e))
 
@@ -106,7 +104,7 @@ def turn_on(jvm_args):
     :return flask.Response: HTTP 204 No Content
     """
     try:
-        server.start(jvm_params=jvm_args)
+        SERVER.start(jvm_params=jvm_args)
         return Response(status=204)
     except ServerAlreadyRunningError:
         abort(409, 'Server is already running')
@@ -121,7 +119,7 @@ def turn_off():
     :return flask.Response: HTTP 204 No Content
     """
     try:
-        server.stop()
+        SERVER.stop()
         return Response(status=204)
     except ServerNotRunningError:
         abort(409, 'Server is not running')

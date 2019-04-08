@@ -46,7 +46,7 @@ class _ServerList(YamlFileIO):
 
     def load(self):
         """
-        Returns the server list.
+        Returns the server list. Will update the list if one doesn't exist.
         """
         self._update_if_not_exists()
         return self.read()

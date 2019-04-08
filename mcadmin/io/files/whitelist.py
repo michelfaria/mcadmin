@@ -1,9 +1,9 @@
 import os
 
 from mcadmin.io.files.files import EntryConflictError, EntryNotFoundError, JsonListFileIO
-from mcadmin.io.server.server import SERVER_DIR
+from mcadmin.io.server.server import SERVER
 
-_FILEPATH = os.path.join(SERVER_DIR, 'whitelist.json')
+_FILEPATH = os.path.join(SERVER.DIR, 'whitelist.json')
 _UUID = 'uuid'
 _NAME = 'name'
 

@@ -4,8 +4,7 @@ from flask import render_template, Response, request, abort
 from flask_login import login_required
 
 from mcadmin.main import app
-from mcadmin.io.server import server
-from mcadmin.io.server.server import is_server_running, CONSOLE_OUTPUT_COND, CONSOLE_OUTPUT, ServerNotRunningError
+from mcadmin.io.server.server import SERVER, ServerNotRunningError
 from mcadmin.util import require_json
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +37,7 @@ def console_panel():
             - "input_line" is over MAX_INPUT_LENGTH characters long
     """
     if request.method == 'GET':
-        return render_template('panel/console.html', console_history=''.join(CONSOLE_OUTPUT))
+        return render_template('panel/console.html', console_history=''.join(SERVER.console_output))
 
     assert request.method == 'POST'
     require_json()
@@ -53,7 +52,7 @@ def console_panel():
         abort(400, 'Input line must not exceed %d characters.' % _MAX_INPUT_LENGTH)
 
     try:
-        server.input_line(input_line)
+        SERVER.input_line(input_line)
     except ServerNotRunningError:
         return 'Server is not running', 409
 
@@ -75,16 +74,16 @@ def console_panel_stream():
         try:
             is_first_iter = True
             while True:
-                with CONSOLE_OUTPUT_COND:
-                    if is_server_running():
+                with SERVER.OUTPUT_UPDATE:
+                    if SERVER.is_running():
                         # Do not attempt to send any data in first loop iteration.
                         # This is because there is usually no data to send.
                         if not is_first_iter:
-                            yield 'data: ' + str(CONSOLE_OUTPUT[-1]) + '\n\n'
-                        CONSOLE_OUTPUT_COND.wait()
+                            yield 'data: ' + str(SERVER.console_output[-1]) + '\n\n'
+                        SERVER.OUTPUT_UPDATE.wait()
                     else:
                         yield 'data: ' + _SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
-                        CONSOLE_OUTPUT_COND.wait()
+                        SERVER.OUTPUT_UPDATE.wait()
                 is_first_iter = False
         except GeneratorExit as e:
             # This means the user quit the console page

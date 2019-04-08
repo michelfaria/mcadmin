@@ -3,9 +3,9 @@ from datetime import datetime
 
 from mcadmin.io.files.files import EntryConflictError, EntryNotFoundError, JsonListFileIO
 from mcadmin.io.mc_profile import mc_uuid
-from mcadmin.io.server.server import SERVER_DIR
+from mcadmin.io.server.server import SERVER
 
-_BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
+_BANNED_PLAYERS_FILEPATH = os.path.join(SERVER.DIR, 'banned-players.json')
 _UUID = 'uuid'
 _NAME = 'name'
 _CREATED = 'created'
