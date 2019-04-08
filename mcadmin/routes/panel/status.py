@@ -104,7 +104,7 @@ def turn_on(jvm_args):
     :return flask.Response: HTTP 204 No Content
     """
     try:
-        SERVER.start(jvm_params=jvm_args)
+        SERVER.autostart(jvm_params=jvm_args)
         return Response(status=204)
     except ServerAlreadyRunningError:
         abort(409, 'Server is already running')

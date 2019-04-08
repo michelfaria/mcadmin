@@ -11,8 +11,10 @@ from subprocess import Popen, PIPE
 
 import requests
 
+from mcadmin.config import CONFIG, SECTION_MAIN, USE_SERVER_JAR
 from mcadmin.io.files.server_list import SERVER_LIST
 
+_EULA_TXT = 'eula.txt'
 _LOGGER = logging.getLogger(__name__)
 
 # Maximum amount of times to try to download a server executable from the internet
@@ -141,7 +143,7 @@ class Server:
             _LOGGER.info('Python is exiting: terminating server process.')
             self.stop()
 
-    def _locate_server_file_path(self):
+    def locate_server_file_path(self):
         """
         Locates the server executable .jar file to be ran by MCAdmin.
 
@@ -159,12 +161,13 @@ class Server:
             raise TooManyMatchesError('Found more than one server executable in %s: %s' % (self.DIR, str(matches)))
         return os.path.basename(matches[0])
 
-    def _download_latest_vanilla_server(self):
+    def download_latest_vanilla_server(self):
         """
         Downloads the latest vanilla server from the internet and writes the file to the server directory.
         The filename will be the full name of the version.
 
         :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
+        :returns str: Name of the file
         """
         version, full_name, link = SERVER_LIST.latest_stable_version()
 
@@ -178,6 +181,7 @@ class Server:
 
                 with open(write_to, 'wb') as f:
                     f.write(response.content)
+
                 return full_name
             except IOError as e:
                 _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
@@ -190,21 +194,42 @@ class Server:
         Creates an `eula.txt` file inside the server directory.
         Writes the text required to agree to the Mojang EULA to the file.
         """
-        eula_path = os.path.join(self.DIR, 'eula.txt')
-        with open(eula_path, 'w') as f:
+        with open(self.eulapath(), 'w') as f:
             f.write(
                 '#By changing the setting below to TRUE you are indicating your agreement to our EULA '
                 '(https://account.mojang.com/documents/minecraft_eula)\n'
                 '#Mon Mar 20 21:15:37 PDT 2017\n'
                 'eula=true\n')
 
-    def start(self, jar_name=None, jvm_params=''):
-        """
-        Starts the server. The latest server file will be downloaded automatically if `jar_name` was not specified and
-        a server executable does not exist inside the server directory.
+    def eulapath(self):
+        return os.path.join(self.DIR, _EULA_TXT)
 
-        :param str jar_name: The filename of the server to use. If not specified, it will find the server file
-                             automatically.
+    def jarpath(self):
+        return os.path.join(self.DIR, self.jar)
+
+    def autostart(self, *args, **kwargs):
+        """
+        Starts the server and automatically downloads the latest stable version no jar is configured.
+        Updates the config with the new jar if one was not found.
+        """
+        if not self.jar:
+            config_jar = CONFIG[SECTION_MAIN][USE_SERVER_JAR]
+            if config_jar:
+                self.jar = config_jar
+            else:
+                new_jar = self.download_latest_vanilla_server()
+
+                self.jar = new_jar
+                # Save to config
+                CONFIG[SECTION_MAIN][USE_SERVER_JAR] = new_jar
+
+        assert self.jar
+        self.start(*args, **kwargs)
+
+    def start(self, jvm_params=''):
+        """
+        Starts the server. Will use the jar in `self.jar`.
+
         :param str jvm_params: Parameters used when starting the JVM. Nothing by default.
 
         :raise ServerAlreadyRunningError: If the server is already running.
@@ -219,19 +244,13 @@ class Server:
             if self.is_running():
                 raise ServerAlreadyRunningError('Server is already running')
 
-            if jar_name:
-                path = os.path.join(self.DIR, jar_name)
-                if not os.path.exists(path):
-                    raise FileNotFoundError('Jar file %s not found' % os.path.abspath(path))
-                self.jar = jar_name
-            else:
-                try:
-                    self.jar = self._locate_server_file_path()
-                except FileNotFoundError:
-                    _LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
-                    self.jar = self._download_latest_vanilla_server()
+            if not self.jar:
+                raise ValueError('Jar not specified')
 
-            assert self.jar and self.jar is not ''
+            # Ensure jar path exists
+            jarpath = self.jarpath()
+            if not os.path.exists(jarpath):
+                raise FileNotFoundError('File not found: ' + jarpath)
 
             # EULA has to be agreed to otherwise server won't start.
             self._agree_eula()
@@ -249,6 +268,7 @@ class Server:
         """
         Starts the console thread.
         """
+
         def _console_worker():
             """
             Will read the output from the server process constantly until the server is stopped. It will add the output
