@@ -1,8 +1,8 @@
 import os
 
-from mcadmin.io.files import JsonIO, EntryConflictError
+from mcadmin.io.files.files import JsonIO, EntryConflictError, EntryNotFoundError
 from mcadmin.server.server import SERVER_DIR
-from mcadmin.io.mc_profile import mc_uuid
+from mcadmin.io.files.mc_profile import mc_uuid
 from datetime import datetime
 
 BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
@@ -60,6 +60,27 @@ class BannedPlayersIO(JsonIO):
         }
 
         list_.append(new_entry)
+        self.write(list_)
+
+    def pardon(self, name):
+        """
+        Pardons a user.
+
+        :param str name: Username of the user to pardon.
+        :raises EntryNotFoundError: If the player is not found in the ban list
+        """
+        list_ = self.read()
+
+        found = False
+        for i, e in enumerate(list_):
+            if e[NAME].casefold() == name.casefold():
+                found = True
+                del list_[i]
+                break
+
+        if not found:
+            raise EntryNotFoundError('%s not found in the ban list.' % name)
+
         self.write(list_)
 
     # noinspection PyProtectedMember

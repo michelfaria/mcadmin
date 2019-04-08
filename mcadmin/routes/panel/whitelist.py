@@ -2,9 +2,9 @@ from flask import render_template, flash, redirect, url_for
 from flask_login import login_required
 
 from mcadmin.exception import PublicError
-from mcadmin.forms.whitelist_operation import WhitelistForm
-from mcadmin.io import mc_profile
-from mcadmin.io.whitelist import whitelist_io
+from mcadmin.forms.whitelist import WhitelistForm
+from mcadmin.io.files import mc_profile
+from mcadmin.io.files.whitelist import whitelist_io
 from mcadmin.main import app
 
 

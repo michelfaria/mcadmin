@@ -1,5 +1,8 @@
 {% extends "panel/_template.html" %}
 
+{% from "_utilmacros.html" import list_flashed_messages %}
+{% from "_formhelpers.html" import render_field %}
+
 {% block title %}
     Banned Players
 {% endblock %}
@@ -13,5 +16,42 @@
     {{ super() }}
     <div class="mc-card">
         <h1>Banned Players</h1>
+        {{ list_flashed_messages() }}
+        <h2>Ban Player</h2>
+
+        <form action="{{ url_for('ban_player') }}" method="post">
+            {{ render_field(ban_form.name) }}
+            {{ render_field(ban_form.reason) }}
+            {{ ban_form.csrf_token }}
+            <button type="submit">Ban</button>
+        </form>
+
+        <table border="1px">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Ban Reason</th>
+                <th>Date</th>
+                <th>Action(s)</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for e in ban_list %}
+                <tr>
+                    <td>{{ e['name'] }}</td>
+                    <td>{{ e['reason'] }}</td>
+                    <td>{{ e['created'] }}</td>
+                    <td>
+                        <form action="{{ url_for('pardon_player') }}" method="post">
+                            <!--suppress HtmlFormInputWithoutLabel -->
+                            <input name="name" type="text" class="hidden" value="{{ e['name'] }}">
+                            {{ pardon_form.csrf_token }}
+                            <button type="submit">Pardon</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
     </div>
 {% endblock %}

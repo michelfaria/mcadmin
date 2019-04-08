@@ -2,7 +2,7 @@ from flask import render_template, flash, url_for, redirect
 from flask_login import login_required
 
 from mcadmin.forms.server_properties import ServerPropertiesForm
-from mcadmin.io.files import server_properties_io
+from mcadmin.io.files.server_properties import server_properties_io
 from mcadmin.main import app
 
 MAX_PROPERTIES_INPUT_LEN = 2000

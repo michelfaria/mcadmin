@@ -5,10 +5,6 @@ import json
 import os
 
 from mcadmin.exception import PublicError
-from mcadmin.server.server import SERVER_DIR
-
-SERVER_PROPERTIES_FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
-BANNED_IPS_FILEPATH = os.path.join(SERVER_DIR, 'banned-ips.json')
 
 
 class EntryConflictError(PublicError):
@@ -67,5 +63,3 @@ class JsonIO(FileIO):
         return super().write(parsed)
 
 
-server_properties_io = FileIO(SERVER_PROPERTIES_FILEPATH)
-banned_ips_io = FileIO(BANNED_IPS_FILEPATH)
