@@ -45,7 +45,7 @@ class ServerNotRunningError(Exception):
 
 class ServerStatus(Enum):
     """
-    Enum for representing server statuses. See is_server_running() for usage.
+    Enum for representing server statuses. See Server.is_running() for usage.
     """
     RUNNING = 'running'
     CLOSED = 'closed'
@@ -55,6 +55,9 @@ class ServerStatus(Enum):
 class Server:
     def __init__(self, dir_):
         self.DIR = dir_
+
+        # Jar name being used by the server
+        self.jar = None
 
         self.console_output = collections.deque(maxlen=_CONSOLE_OUTPUT_MAX_LINES)
 
@@ -88,7 +91,7 @@ class Server:
 
     def _notify_status_change(self):
         """
-        Notifies all threads waiting on the SERVER_STATUS_CHANGE Condition.
+        Notifies all threads waiting on the self.STATUS_CHANGE Condition.
         """
         with self.STATUS_CHANGE:
             self.STATUS_CHANGE.notify_all()
@@ -98,7 +101,7 @@ class Server:
         Stops the server.
 
         It will first try to stop the server gracefully with a SIGTERM, but if the server does not close within
-        SIGTERM_WAIT_SECONDS seconds, the server process will be forcefully terminated.
+        _SIGTERM_WAIT_SECONDS seconds, the server process will be forcefully terminated.
 
         This method notifies a status change.
 
@@ -158,10 +161,10 @@ class Server:
 
     def _download_latest_vanilla_server(self):
         """
-        Downloads the latest vanilla server from the internet and writes the file to SERVER_DIR.
+        Downloads the latest vanilla server from the internet and writes the file to the server directory.
         The filename will be the full name of the version.
 
-        :raises IOError: If download failed after MAX_DOWNLOAD_ATTEMPTS attempts
+        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
         """
         version, full_name, link = SERVER_LIST.latest_stable_version()
 
@@ -197,21 +200,16 @@ class Server:
 
     def start(self, jar_name=None, jvm_params=''):
         """
-        Starts the server.
+        Starts the server. The latest server file will be downloaded automatically if `jar_name` was not specified and
+        a server executable does not exist inside the server directory.
 
-        The latest server file will be downloaded automatically if `server_jar_name` was not specified and a server
-        executable does not exist inside the server directory.
-
-        This will also start the console thread.
-        This method notified a status change.
-
-        :param jar_name: The filename of the server to use.
-                                If not specified, it will find the server file automatically.
-        :param jvm_params:      Parameters used when starting the JVM. Nothing by default.
+        :param str jar_name: The filename of the server to use. If not specified, it will find the server file
+                             automatically.
+        :param str jvm_params: Parameters used when starting the JVM. Nothing by default.
 
         :raise ServerAlreadyRunningError: If the server is already running.
-        :raise FileNotFoundError:         If `server_jar_name` param was specified but a file by that name was not found
-                                          inside the server directory.
+        :raise FileNotFoundError: If `server_jar_name` param was specified but a file by that name was not found inside
+                                  the server directory.
         """
         # Create server files directory if it does not exist.
         if not os.path.exists(self.DIR):
@@ -221,43 +219,40 @@ class Server:
             if self.is_running():
                 raise ServerAlreadyRunningError('Server is already running')
 
-            # if a server jar name was specified,
-            # it will be used instead of the latest version
             if jar_name:
                 path = os.path.join(self.DIR, jar_name)
                 if not os.path.exists(path):
-                    raise FileNotFoundError('File %s not found' % os.path.abspath(path))
+                    raise FileNotFoundError('Jar file %s not found' % os.path.abspath(path))
+                self.jar = jar_name
             else:
-                # server file not specified
-                # download latest stable version
                 try:
-                    jar_name = self._locate_server_file_path()
+                    self.jar = self._locate_server_file_path()
                 except FileNotFoundError:
                     _LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
-                    jar_name = self._download_latest_vanilla_server()
-            assert jar_name
+                    self.jar = self._download_latest_vanilla_server()
 
-            # eula has to be agreed to otherwise server won't start
+            assert self.jar and self.jar is not ''
+
+            # EULA has to be agreed to otherwise server won't start.
             self._agree_eula()
 
-            command = 'java %s -jar %s nogui' % (jvm_params, jar_name)
+            # Start process.
+            command = 'java %s -jar %s nogui' % (jvm_params, self.jar)
             self._proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=self.DIR)
 
+            # Start threads.
             self._start_console_thread()
             self._start_watchdog_thread()
             self._notify_status_change()
 
     def _start_console_thread(self):
         """
-        Starts the console thread and assigns it to the global `console_thread` variable.
-
-        :raise ValueError: if a thread is already referenced by `console_thread`.
+        Starts the console thread.
         """
-
         def _console_worker():
             """
             Will read the output from the server process constantly until the server is stopped. It will add the output
-            lines to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
+            lines to the `self.console_output` deque and notify self.OUTPUT_UPDATE that the console was updated.
             """
             while self.is_running():
 
@@ -284,14 +279,12 @@ class Server:
 
     def _start_watchdog_thread(self):
         """
-        Starts the watchdog thread and assigns it to the global `watchdog_thread` variable.
-
-        :raise ValueError: If `watchdog_thread` already has an assignment
+        Starts the watchdog thread.
         """
 
         def _watchdog_worker():
             """
-            Will officially stop the server whenever it sees that the process has ended, until `proc` is de-referenced.
+            Will call the stop procedure when the server process closes.
             """
             while self._proc is not None:
                 if self.status() == ServerStatus.CLOSED:

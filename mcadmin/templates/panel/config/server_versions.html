@@ -1,4 +1,4 @@
-{% extends "panel/config/_template.html" %}
+ng{% extends "panel/config/_template.html" %}
 {% from "_utilmacros.html" import list_flashed_messages %}
 {% from "_formhelpers.html" import render_field %}
 
@@ -10,6 +10,8 @@
 {% block in_card %}
     {{ super() }}
     {{ list_flashed_messages() }}
+
+    <p>Current Version: {{ current_jar }}</p>
     <form method="post">
 
     </form>
