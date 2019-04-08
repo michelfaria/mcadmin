@@ -1,7 +1,7 @@
 import os
 
 from mcadmin.io.files.files import FileIO
-from mcadmin.server.server import SERVER_DIR
+from mcadmin.io.server.server import SERVER_DIR
 
-SERVER_PROPERTIES_FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
-server_properties_io = FileIO(SERVER_PROPERTIES_FILEPATH)
+_FILEPATH = os.path.join(SERVER_DIR, 'server.properties')
+SERVER_PROPERTIES = FileIO(_FILEPATH)

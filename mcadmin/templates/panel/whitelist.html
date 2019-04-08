@@ -23,17 +23,28 @@
             <button type="submit" class="mc-grn-btn">Submit</button>
         </form>
 
-        <h1>Remove</h1>
-        <form action="{{ url_for('whitelist_remove') }}" method="post">
-            {{ render_field(form.name) }}
-            {{ form.csrf_token }}
-            <button type="submit" class="mc-grn-btn">Submit</button>
-        </form>
-
-        <ul>
+        <table border="1">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
             {% for user in users %}
-                <li>{{ user.name }}</li>
+                <tr>
+                    <td>{{ user.name }}</td>
+                    <td>
+                        <form action="{{ url_for('whitelist_remove') }}" method="post">
+                            <!--suppress HtmlFormInputWithoutLabel -->
+                            <input name="name" type="text" value="{{ user.name }}" class="hidden">
+                            {{ form.csrf_token }}
+                            <button type="submit">Remove</button>
+                        </form>
+                    </td>
+                </tr>
             {% endfor %}
-        </ul>
+            </tbody>
+        </table>
     </div>
 {% endblock %}

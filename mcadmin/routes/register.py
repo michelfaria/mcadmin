@@ -24,5 +24,4 @@ def register():
         password = request.form['password']
         save_password(password)
         return redirect('/')
-    else:
-        return render_template('registration.html', form=form)
+    return render_template('registration.html', form=form)

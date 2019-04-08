@@ -11,25 +11,26 @@ from subprocess import Popen, PIPE
 
 import requests
 
-from mcadmin.server import server_repo
+from mcadmin.io.files.server_list import SERVER_LIST
 
-LOGGER = logging.getLogger(__name__)
 SERVER_DIR = 'server_files'  # Server files directory
-MAX_DOWNLOAD_ATTEMPTS = 2  # Maximum amount of times to try to download a server executable from the internet
-SIGTERM_WAIT_SECONDS = 30  # Maximum amount of time to wait for a process to end
-CONSOLE_OUTPUT_MAX_LINES = 100  # Maximum amount of lines that there can be inside the console_output deque
 
 # Notified every time the server status change from ON to OFF or vice-versa.
 SERVER_STATUS_CHANGE = threading.Condition()
 # Notified whenever there is a console output
 CONSOLE_OUTPUT_COND = threading.Condition()
 
+_LOGGER = logging.getLogger(__name__)
+_MAX_DOWNLOAD_ATTEMPTS = 2  # Maximum amount of times to try to download a server executable from the internet
+_SIGTERM_WAIT_SECONDS = 30  # Maximum amount of time to wait for a process to end
+_CONSOLE_OUTPUT_MAX_LINES = 100  # Maximum amount of lines that there can be inside the console_output deque
+
 # Console output buffer that will be sent to the client when they open the console page
-CONSOLE_OUTPUT = collections.deque(maxlen=CONSOLE_OUTPUT_MAX_LINES)
+CONSOLE_OUTPUT = collections.deque(maxlen=_CONSOLE_OUTPUT_MAX_LINES)
 
 # Java Server Process Handle
-proc = None  # type: Popen
-PROC_LOCK = threading.RLock()
+_proc = None  # type: Popen
+_PROC_LOCK = threading.RLock()
 
 # Create server files directory if it does not exist.
 if not os.path.exists(SERVER_DIR):
@@ -70,10 +71,10 @@ def server_status():
         ServerStatus.CLOSED: If server process is referenced but has return code
         ServerStatus.DISABLED: If server process is not referenced
     """
-    with PROC_LOCK:
-        if proc is None:
+    with _PROC_LOCK:
+        if _proc is None:
             return ServerStatus.DISABLED
-        return_code = proc.poll()
+        return_code = _proc.poll()
         if return_code is None:
             return ServerStatus.RUNNING
         return ServerStatus.CLOSED
@@ -102,32 +103,32 @@ def stop():
 
     :raises ServerNotRunningError: if the server is not running
     """
-    global proc
+    global _proc
 
-    with PROC_LOCK:
+    with _PROC_LOCK:
         status = server_status()
 
         if status == ServerStatus.RUNNING:
-            LOGGER.info('Waiting at most %s seconds for server to shut down...' % SIGTERM_WAIT_SECONDS)
-            proc.send_signal(signal.SIGTERM)
-            proc.wait(SIGTERM_WAIT_SECONDS)
+            _LOGGER.info('Waiting at most %s seconds for server to shut down...' % _SIGTERM_WAIT_SECONDS)
+            _proc.send_signal(signal.SIGTERM)
+            _proc.wait(_SIGTERM_WAIT_SECONDS)
 
-            return_code = proc.poll()
+            return_code = _proc.poll()
 
             if return_code is None:
-                LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
-                proc.terminate()
+                _LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
+                _proc.terminate()
 
         elif status == ServerStatus.CLOSED:
-            LOGGER.info('Server process was referenced, but it was already closed. Discarding reference.')
+            _LOGGER.info('Server process was referenced, but it was already closed. Discarding reference.')
 
         else:
             assert status == ServerStatus.DISABLED
             raise ServerNotRunningError('Server already stopped')
 
-        proc = None
+        _proc = None
 
-    LOGGER.info('Server process closed.')
+    _LOGGER.info('Server process closed.')
 
     _notify_status_change()
 
@@ -137,7 +138,7 @@ def _on_program_exit():
     Close the server before exiting the Python interpreter.
     """
     if is_server_running():
-        LOGGER.info('Python is exiting: terminating server process.')
+        _LOGGER.info('Python is exiting: terminating server process.')
         stop()
 
 
@@ -171,24 +172,24 @@ def _download_latest_vanilla_server():
 
     :raises IOError: If download failed after MAX_DOWNLOAD_ATTEMPTS attempts
     """
-    version, full_name, link = server_repo.latest_stable_ver()
+    version, full_name, link = SERVER_LIST.latest_stable_version()
 
-    for attempt in range(MAX_DOWNLOAD_ATTEMPTS):
-        LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
+    for attempt in range(_MAX_DOWNLOAD_ATTEMPTS):
+        _LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
         try:
             response = requests.get(link)
             write_to = os.path.join(os.path.abspath(SERVER_DIR), full_name)
 
-            LOGGER.info('Done. Writing to %s ...' % write_to)
+            _LOGGER.info('Done. Writing to %s ...' % write_to)
 
             with open(write_to, 'wb') as f:
                 f.write(response.content)
             return full_name
         except IOError as e:
-            LOGGER.error('Could not download server executable. Error: [%s] %s' % (
-                str(e), '... Retrying' if attempt + 1 < MAX_DOWNLOAD_ATTEMPTS else ''))
+            _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
+                str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
 
-    raise IOError('Failed to download server executable after %s attempts.' % MAX_DOWNLOAD_ATTEMPTS)
+    raise IOError('Failed to download server executable after %s attempts.' % _MAX_DOWNLOAD_ATTEMPTS)
 
 
 def _agree_eula():
@@ -209,8 +210,8 @@ def start(server_jar_name=None, jvm_params=''):
     """
     Starts the server.
 
-    The latest server file will be downloaded automatically if `server_jar_name` was not specified and a server executable
-    does not exist inside the server directory.
+    The latest server file will be downloaded automatically if `server_jar_name` was not specified and a server
+    executable does not exist inside the server directory.
 
     This will also start the console thread.
     This method notified a status change.
@@ -223,9 +224,9 @@ def start(server_jar_name=None, jvm_params=''):
     :raise FileNotFoundError:         If `server_jar_name` param was specified but a file by that name was not found
                                       inside the server directory.
     """
-    global proc
+    global _proc
 
-    with PROC_LOCK:
+    with _PROC_LOCK:
         if is_server_running():
             raise ServerAlreadyRunningError('Server is already running')
 
@@ -241,7 +242,7 @@ def start(server_jar_name=None, jvm_params=''):
             try:
                 server_jar_name = _locate_server_file_name()
             except FileNotFoundError:
-                LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
+                _LOGGER.warning('No server executable found; will attempt to download latest vanilla server.')
                 server_jar_name = _download_latest_vanilla_server()
         assert server_jar_name
 
@@ -249,7 +250,7 @@ def start(server_jar_name=None, jvm_params=''):
         _agree_eula()
 
         command = 'java %s -jar %s nogui' % (jvm_params, server_jar_name)
-        proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
+        _proc = Popen(command, stdout=PIPE, stdin=PIPE, stderr=PIPE, cwd=SERVER_DIR)
 
         _start_console_thread()
         _start_watchdog_thread()
@@ -265,8 +266,8 @@ def _start_console_thread():
 
     def _console_worker():
         """
-        Will read the output from the server process constantly until the server is stopped. It will add the output lines
-        to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
+        Will read the output from the server process constantly until the server is stopped. It will add the output
+        lines to the `console_output` deque and notify CONSOLE_OUTPUT_COND that the console was updated.
         """
         while is_server_running():
             # This ugly hack is required because I needed an atomic comparison, so that the code wouldn't try to
@@ -274,8 +275,8 @@ def _start_console_thread():
             # not be acquired here because `proc.stdout.readline()` is blocking.
 
             # Line being set to none indicates that the process is closed.
-            line = proc.stdout.readline() \
-                if proc is not None and proc.poll() is None \
+            line = _proc.stdout.readline() \
+                if _proc is not None and _proc.poll() is None \
                 else None
             if line is None:
                 break
@@ -283,7 +284,7 @@ def _start_console_thread():
             if line != b'':  # Sometimes it reads this and I don't want it
                 encoded = line.decode('utf-8')
                 CONSOLE_OUTPUT.append(encoded)
-                LOGGER.debug(encoded)
+                _LOGGER.debug(encoded)
 
                 with CONSOLE_OUTPUT_COND:
                     CONSOLE_OUTPUT_COND.notify_all()
@@ -302,12 +303,12 @@ def _start_watchdog_thread():
         """
         Will officially stop the server whenever it sees that the process has ended, until `proc` is de-referenced.
         """
-        while proc is not None:
+        while _proc is not None:
             if server_status() == ServerStatus.CLOSED:
-                LOGGER.debug('[Watchdog] Process is closed; calling stop()')
+                _LOGGER.debug('[Watchdog] Process is closed; calling stop()')
                 stop()
             time.sleep(1)
-        LOGGER.debug('[Watchdog] Quit')
+        _LOGGER.debug('[Watchdog] Quit')
 
     threading.Thread(target=_watchdog_worker).start()
 
@@ -319,15 +320,15 @@ def input_line(text):
     :param text: Input to send
     :raise ServerNotRunningError: if the server is not running
     """
-    with PROC_LOCK:
+    with _PROC_LOCK:
         _require_server()
         if isinstance(text, str):
             text = text.encode()
         if not text.endswith(b'\n'):
             text += b'\n'
-        LOGGER.debug('Input: ' + str(text))
-        proc.stdin.write(text)
-        proc.stdin.flush()
+        _LOGGER.debug('Input: ' + str(text))
+        _proc.stdin.write(text)
+        _proc.stdin.flush()
 
 
 def _require_server():
@@ -349,6 +350,6 @@ if __name__ == '__main__':
     import shutil
 
     shutil.rmtree(SERVER_DIR)
-    os.remove(server_repo.FILENAME)
+    SERVER_LIST.delete()
 
-    assert proc is None
+    assert _proc is None

@@ -1,21 +1,19 @@
 import os
-
-from mcadmin.io.files.files import JsonIO, EntryConflictError, EntryNotFoundError
-from mcadmin.server.server import SERVER_DIR
-from mcadmin.io.files.mc_profile import mc_uuid
 from datetime import datetime
 
-BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
+from mcadmin.io.files.files import EntryConflictError, EntryNotFoundError, JsonListFileIO
+from mcadmin.io.mc_profile import mc_uuid
+from mcadmin.io.server.server import SERVER_DIR
 
-UUID = 'uuid'
-NAME = 'name'
-CREATED = 'created'
-SOURCE = 'source'
-EXPIRES = 'expires'
-REASON = 'reason'
-
-FOREVER = 'forever'
-DEFAULT_BAN_REASON = 'Banned by an operator.'
+_BANNED_PLAYERS_FILEPATH = os.path.join(SERVER_DIR, 'banned-players.json')
+_UUID = 'uuid'
+_NAME = 'name'
+_CREATED = 'created'
+_SOURCE = 'source'
+_EXPIRES = 'expires'
+_REASON = 'reason'
+_FOREVER = 'forever'
+_DEFAULT_BAN_REASON = 'Banned by an operator.'
 
 
 def mojang_time_format(dt):
@@ -29,9 +27,9 @@ def mojang_time_format(dt):
     return dt.strftime('%Y-%m-%d %H:%M:%S +0000')
 
 
-class BannedPlayersIO(JsonIO):
+class _BannedPlayersFileIO(JsonListFileIO):
     def __init__(self):
-        super().__init__(BANNED_PLAYERS_FILEPATH)
+        super().__init__(_BANNED_PLAYERS_FILEPATH)
 
     def ban(self, name, reason=None):
         """
@@ -44,19 +42,19 @@ class BannedPlayersIO(JsonIO):
         :raises ProfileAPIError: If the Mojang API responds erroneously
         :raises UUIDNotFoundError: If UUID for username was not found
         """
-        list_ = self.read()
+        list_ = self.reads()
 
         if self._is_banned(name, list_):
             raise EntryConflictError('Player %s is already banned.', name)
 
         uuid = mc_uuid(name)
         new_entry = {
-            UUID: uuid,
-            NAME: name,
-            CREATED: mojang_time_format(datetime.now()),
-            SOURCE: 'MCAdmin',
-            EXPIRES: FOREVER,
-            REASON: DEFAULT_BAN_REASON if reason is None else reason
+            _UUID: uuid,
+            _NAME: name,
+            _CREATED: mojang_time_format(datetime.now()),
+            _SOURCE: 'MCAdmin',
+            _EXPIRES: _FOREVER,
+            _REASON: _DEFAULT_BAN_REASON if reason is None or reason == '' else reason
         }
 
         list_.append(new_entry)
@@ -69,11 +67,11 @@ class BannedPlayersIO(JsonIO):
         :param str name: Username of the user to pardon.
         :raises EntryNotFoundError: If the player is not found in the ban list
         """
-        list_ = self.read()
+        list_ = self.reads()
 
         found = False
         for i, e in enumerate(list_):
-            if e[NAME].casefold() == name.casefold():
+            if e[_NAME].casefold() == name.casefold():
                 found = True
                 del list_[i]
                 break
@@ -92,17 +90,17 @@ class BannedPlayersIO(JsonIO):
         :param list_: Ban list to use. Will read list from disk if not specified.
         :return bool: True if the specified name is contained in the ban list.
 
-        >>> o = BannedPlayersIO()
-        >>> o._is_banned('john', [{NAME: 'Mack'}, {NAME: 'John'}])
+        >>> o = _BannedPlayersFileIO()
+        >>> o._is_banned('john', [{_NAME: 'Mack'}, {_NAME: 'John'}])
         True
 
-        >>> o = BannedPlayersIO()
-        >>> o._is_banned('bob', [{NAME: 'John'}, {NAME: 'Jack'}])
+        >>> o = _BannedPlayersFileIO()
+        >>> o._is_banned('bob', [{_NAME: 'John'}, {_NAME: 'Jack'}])
         False
         """
         if list_ is None:
-            list_ = self.read()
-        return any([e for e in list_ if e[NAME].casefold() == name.casefold()])
+            list_ = self.reads()
+        return any([e for e in list_ if e[_NAME].casefold() == name.casefold()])
 
 
-banned_players_io = BannedPlayersIO()
+BANNED_PLAYERS = _BannedPlayersFileIO()

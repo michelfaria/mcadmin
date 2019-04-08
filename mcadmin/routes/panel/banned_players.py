@@ -3,7 +3,7 @@ from flask_login import login_required
 
 from mcadmin.exception import PublicError
 from mcadmin.forms.banned_players import BanPlayerForm, PardonPlayerForm
-from mcadmin.io.files.banned_players import banned_players_io
+from mcadmin.io.files.banned_players import BANNED_PLAYERS
 from mcadmin.main import app
 
 
@@ -13,7 +13,8 @@ def banned_players_panel():
     ban_form = BanPlayerForm()
     pardon_form = PardonPlayerForm()
 
-    ban_list = banned_players_io.read()
+    ban_list = BANNED_PLAYERS.reads()
+
     return render_template('panel/banned_players.html', ban_form=ban_form, pardon_form=pardon_form, ban_list=ban_list)
 
 
@@ -26,7 +27,7 @@ def ban_player():
         name = ban_form.name.data
         reason = ban_form.reason.data
         try:
-            banned_players_io.ban(name, reason)
+            BANNED_PLAYERS.ban(name, reason)
             flash('User %s banned.' % name)
         except PublicError as e:
             flash('Error: ' + str(e))
@@ -42,7 +43,7 @@ def pardon_player():
     if pardon_form.validate_on_submit():
         name = pardon_form.name.data
         try:
-            banned_players_io.pardon(name)
+            BANNED_PLAYERS.pardon(name)
             flash('User %s pardoned.' % name)
         except PublicError as e:
             flash('Error: ' + str(e))

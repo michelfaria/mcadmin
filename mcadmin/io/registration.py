@@ -1,13 +1,13 @@
 import os.path
 
-AUTH_FILE = 'credentials.bfe'
+_AUTH_FILE = 'credentials.bfe'
 
 
 def is_registered():
     """
     :returns: true if the MCAdmin instance is registered with an administrative password.
     """
-    return os.path.isfile(AUTH_FILE)
+    return os.path.isfile(_AUTH_FILE)
 
 
 def save_password(password):
@@ -17,12 +17,12 @@ def save_password(password):
 
     TODO: Password hashing algorithm.
     """
-    with open(AUTH_FILE, 'w+') as f:
+    with open(_AUTH_FILE, 'w+') as f:
         f.write(password)
 
 
 def _get_hashed_password():
-    with open(AUTH_FILE, 'r') as f:
+    with open(_AUTH_FILE, 'r') as f:
         return f.read()
 
 

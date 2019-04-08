@@ -4,13 +4,13 @@ import logging
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
-from mcadmin.main import app
-from mcadmin.server import server
-from mcadmin.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
+from mcadmin.io.server import server
+from mcadmin.io.server.server import ServerAlreadyRunningError, ServerNotRunningError, is_server_running, \
     SERVER_STATUS_CHANGE
+from mcadmin.main import app
 from mcadmin.util import require_json
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 @app.route('/panel/status', methods=['GET', 'POST'])
@@ -47,24 +47,24 @@ def status_panel():
     """
     if request.method == 'GET':
         return render_template('panel/status.html')
+
+    assert request.method == 'POST'
+    require_json()
+
+    data = request.get_json()
+    assert data is not None
+
+    action = data.get('action')
+    if action is None:
+        abort(400, 'No action')
+
+    if action == 'turn_on':
+        jvm_args = data.get('jvm_args', '')
+        return turn_on(jvm_args)
+    elif action == 'turn_off':
+        return turn_off()
     else:
-        assert request.method == 'POST'
-        require_json()
-
-        data = request.get_json()
-        assert data is not None
-
-        action = data.get('action')
-        if action is None:
-            abort(400, 'No action')
-
-        if action == 'turn_on':
-            jvm_args = data.get('jvm_args', '')
-            return turn_on(jvm_args)
-        elif action == 'turn_off':
-            return turn_off()
-        else:
-            abort(400, 'Unknown action')
+        abort(400, 'Unknown action')
 
 
 @app.route('/panel/status/stream')
@@ -91,7 +91,7 @@ def status_panel_stream():
                 with SERVER_STATUS_CHANGE:
                     SERVER_STATUS_CHANGE.wait()
         except GeneratorExit as e:
-            LOGGER.debug('GeneratorExit status_panel_stream: ' + str(e))
+            _LOGGER.debug('GeneratorExit status_panel_stream: ' + str(e))
 
     return Response(generator(), mimetype='text/event-stream')
 

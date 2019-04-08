@@ -1,5 +1,6 @@
 @import "mixins";
 
+//noinspection SassScssResolvedByNameOnly
 .status-card {
   @include center-flex;
   flex-direction: column;

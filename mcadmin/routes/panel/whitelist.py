@@ -3,8 +3,8 @@ from flask_login import login_required
 
 from mcadmin.exception import PublicError
 from mcadmin.forms.whitelist import WhitelistForm
-from mcadmin.io.files import mc_profile
-from mcadmin.io.files.whitelist import whitelist_io
+from mcadmin.io import mc_profile
+from mcadmin.io.files.whitelist import WHITELIST
 from mcadmin.main import app
 
 
@@ -12,7 +12,7 @@ from mcadmin.main import app
 @login_required
 def whitelist_panel():
     form = WhitelistForm()
-    users = whitelist_io.read()
+    users = WHITELIST.reads()
     return render_template('panel/whitelist.html', form=form, users=users)
 
 
@@ -25,7 +25,7 @@ def whitelist_add():
         name = form.name.data
         try:
             uuid = mc_profile.mc_uuid(name)
-            whitelist_io.add(name, uuid)
+            WHITELIST.add(name, uuid)
             flash('%s added to whitelist' % name)
         except PublicError as e:
             flash('Error: ' + str(e))
@@ -41,7 +41,7 @@ def whitelist_remove():
     if form.validate_on_submit():
         name = form.name.data
         try:
-            whitelist_io.remove(name)
+            WHITELIST.remove(name)
             flash('%s removed from whitelist' % name)
         except PublicError as e:
             flash('Error: ' + str(e))

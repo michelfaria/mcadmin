@@ -10,9 +10,15 @@
 
 {% block content %}
     {{ super() }}
+    <div>
+        <h2>SIDEBAR</h2>
+        <a href="{{ url_for('edit_server_properties') }}">Properties</a>
+        <a href="{{ url_for('server_versions') }}">Manage Server Versions</a>
+        <a href="#">Manage Plugins</a>
+        <a href="#">Manage Files</a>
+    </div>
     <div class="mc-card">
         <h1>Configuration: {{ cfg_name }}</h1>
-        <span>#TOOLBAR-WILL-GO-HERE-SOON#</span>
         {% block in_card %}
         {% endblock %}
     </div>

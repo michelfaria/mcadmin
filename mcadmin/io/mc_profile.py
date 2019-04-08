@@ -8,9 +8,9 @@ import requests
 
 from mcadmin.exception import PublicError
 
-ID = 'id'
-NAME = 'name'
-MOJANG_USER_API = 'https://api.mojang.com/users/profiles/minecraft/'
+_ID = 'id'
+_NAME = 'name'
+_MOJANG_USER_API = 'https://api.mojang.com/users/profiles/minecraft/'
 
 
 class ProfileAPIError(PublicError):
@@ -57,7 +57,7 @@ def mc_uuid(username):
     :raises ProfileAPIError: If the Mojang API responds erroneously
     :raises UUIDNotFoundError: If UUID for username was not found
     """
-    response = requests.get(urljoin(MOJANG_USER_API, username))
+    response = requests.get(urljoin(_MOJANG_USER_API, username))
 
     if response.status_code is 204:
         raise UUIDNotFoundError('No UUID found for %s' % username)
@@ -65,14 +65,14 @@ def mc_uuid(username):
     elif response.status_code is 200:
         response = json.loads(response.content)
 
-        if NAME not in response or ID not in response:
+        if _NAME not in response or _ID not in response:
             raise ProfileAPIError('Received erroneous response from Mojang profile API: %s' % response.content)
-        elif response[NAME].casefold() != username.casefold():
+        elif response[_NAME].casefold() != username.casefold():
             raise ProfileAPIError(
                 'Mojang API may be problematic: Requested profile for %s but got username %s. The entire response '
-                'was: %s' % (username, response[NAME], response.content))
+                'was: %s' % (username, response[_NAME], response.content))
         else:
-            return _format_mojang_uuid(response[ID])
+            return _format_mojang_uuid(response[_ID])
 
     else:
         raise ValueError('Got response status %d but expected 200' % response.status_code)

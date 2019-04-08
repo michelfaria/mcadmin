@@ -1,18 +1,17 @@
 import os
 
-from mcadmin.io.files.files import JsonIO, EntryConflictError, EntryNotFoundError
-from mcadmin.server.server import SERVER_DIR
+from mcadmin.io.files.files import EntryConflictError, EntryNotFoundError, JsonListFileIO
+from mcadmin.io.server.server import SERVER_DIR
 
-FILEPATH = os.path.join(SERVER_DIR, 'whitelist.json')
-
+_FILEPATH = os.path.join(SERVER_DIR, 'whitelist.json')
 _UUID = 'uuid'
 _NAME = 'name'
 
 
-class _WhitelistIO(JsonIO):
+class _WhitelistFileIO(JsonListFileIO):
 
     def __init__(self):
-        super().__init__(FILEPATH)
+        super().__init__(_FILEPATH)
 
     def add(self, username, uuid):
         """
@@ -23,7 +22,7 @@ class _WhitelistIO(JsonIO):
 
         :raises EntryConflictError: If an entry of with that username/uuid already exists
         """
-        list_ = self.read()
+        list_ = self.reads()
 
         for x in list_:
             if x[_NAME] == username:
@@ -45,7 +44,7 @@ class _WhitelistIO(JsonIO):
 
         :raises EntryNotFoundError: If an entry by the given name does not exist
         """
-        list_ = self.read()
+        list_ = self.reads()
 
         found = False
         for i, x in enumerate(list_):
@@ -60,4 +59,4 @@ class _WhitelistIO(JsonIO):
         self.write(list_)
 
 
-whitelist_io = _WhitelistIO()
+WHITELIST = _WhitelistFileIO()

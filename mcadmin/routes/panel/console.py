@@ -4,13 +4,13 @@ from flask import render_template, Response, request, abort
 from flask_login import login_required
 
 from mcadmin.main import app
-from mcadmin.server import server
-from mcadmin.server.server import is_server_running, CONSOLE_OUTPUT_COND, CONSOLE_OUTPUT, ServerNotRunningError
+from mcadmin.io.server import server
+from mcadmin.io.server.server import is_server_running, CONSOLE_OUTPUT_COND, CONSOLE_OUTPUT, ServerNotRunningError
 from mcadmin.util import require_json
 
-LOGGER = logging.getLogger(__name__)
-SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
-MAX_INPUT_LENGTH = 255
+_LOGGER = logging.getLogger(__name__)
+_SERVER_NOT_RUNNING_ERR_CODE = 'mcadmin:err:server_not_running'
+_MAX_INPUT_LENGTH = 255
 
 
 @app.route('/panel/console', methods=['GET', 'POST'])
@@ -39,25 +39,25 @@ def console_panel():
     """
     if request.method == 'GET':
         return render_template('panel/console.html', console_history=''.join(CONSOLE_OUTPUT))
-    else:
-        assert request.method == 'POST'
-        require_json()
 
-        data = request.get_json()
-        assert data is not None
+    assert request.method == 'POST'
+    require_json()
 
-        input_line = data.get('input_line')
-        if input_line is None:
-            abort(400, 'No `input_line')
-        elif len(input_line) > MAX_INPUT_LENGTH:
-            abort(400, 'Input line must not exceed %d characters.' % MAX_INPUT_LENGTH)
+    data = request.get_json()
+    assert data is not None
 
-        try:
-            server.input_line(input_line)
-        except ServerNotRunningError:
-            return 'Server is not running', 409
+    input_line = data.get('input_line')
+    if input_line is None:
+        abort(400, 'No `input_line')
+    elif len(input_line) > _MAX_INPUT_LENGTH:
+        abort(400, 'Input line must not exceed %d characters.' % _MAX_INPUT_LENGTH)
 
-        return '', 204
+    try:
+        server.input_line(input_line)
+    except ServerNotRunningError:
+        return 'Server is not running', 409
+
+    return '', 204
 
 
 @app.route('/panel/console/stream')
@@ -83,11 +83,11 @@ def console_panel_stream():
                             yield 'data: ' + str(CONSOLE_OUTPUT[-1]) + '\n\n'
                         CONSOLE_OUTPUT_COND.wait()
                     else:
-                        yield 'data: ' + SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
+                        yield 'data: ' + _SERVER_NOT_RUNNING_ERR_CODE + '\n\n'
                         CONSOLE_OUTPUT_COND.wait()
                 is_first_iter = False
         except GeneratorExit as e:
             # This means the user quit the console page
-            LOGGER.debug('GeneratorExit console_panel_stream: ' + str(e))
+            _LOGGER.debug('GeneratorExit console_panel_stream: ' + str(e))
 
     return Response(generator(), mimetype='text/event-stream')

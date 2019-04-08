@@ -16,14 +16,16 @@ app.config['SECRET_KEY'] = os.urandom(32)
 login_manager = LoginManager(app)
 Scss(app)
 
-# register routes
+login_manager.login_view = '/login'
+login_manager.login_message = 'Please log in'
+
+# Register routes
 # noinspection PyUnresolvedReferences
 from mcadmin.routes import index, register, login, logout
 # noinspection PyUnresolvedReferences
-from mcadmin.routes.panel import configuration, console, status, whitelist, banned_players
-
-login_manager.login_view = '/login'
-login_manager.login_message = 'Please log in'
+from mcadmin.routes.panel import console, status, whitelist, banned_players
+# noinspection PyUnresolvedReferences
+from mcadmin.routes.panel.configuration import configuration, versions, properties
 
 
 @login_manager.user_loader
