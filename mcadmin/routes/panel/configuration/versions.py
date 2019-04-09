@@ -14,6 +14,6 @@ def server_versions():
     current_jar = CONFIG[SECTION_MAIN][USE_SERVER_JAR]
     assert current_jar is not None
     if current_jar is '':
-        current_jar = '<None set>'
+        current_jar = 'There is no current jar.'
 
     return render_template('panel/config/server_versions.html', current_jar=current_jar, versions=versions)
