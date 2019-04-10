@@ -57,7 +57,7 @@ class _ServerList(YamlFileIO):
                       following format:
                 {
                     'stable': [(version, full_name, link)],
-                    'snapshot': [(version, full_name, link)],
+                    'snapshot': [(version, full_name, link)]
                 }
 
                 The "stable" list is ordered by version number in descending order.

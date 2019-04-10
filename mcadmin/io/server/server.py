@@ -58,9 +58,6 @@ class Server:
     def __init__(self, dir_):
         self.DIR = dir_
 
-        # Jar name being used by the server
-        self.jar = None
-
         self.console_output = collections.deque(maxlen=_CONSOLE_OUTPUT_MAX_LINES)
 
         # Notified every time the server status change from ON to OFF or vice-versa.
@@ -70,8 +67,13 @@ class Server:
         self.OUTPUT_UPDATE = threading.Condition()
 
         # Java Process Handle
+        # noinspection PyTypeChecker
         self._proc = None  # type: Popen
         self._PROC_LOCK = threading.RLock()
+
+    @property
+    def jar(self):
+        return CONFIG[SECTION_MAIN][USE_SERVER_JAR]
 
     def status(self):
         """
@@ -161,33 +163,38 @@ class Server:
             raise TooManyMatchesError('Found more than one server executable in %s: %s' % (self.DIR, str(matches)))
         return os.path.basename(matches[0])
 
+    def _download(self, link, dest_name):
+        """
+        Downloads a file to the server directory.
+
+        :param link: Link to download
+        :param dest_name: Destination name of the file
+        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
+        """
+        for attempt in range(_MAX_DOWNLOAD_ATTEMPTS):
+            try:
+                response = requests.get(link)
+                write_to = os.path.join(os.path.abspath(self.DIR), dest_name)
+                _LOGGER.info('Done. Writing to %s ...' % write_to)
+                with open(write_to, 'wb') as f:
+                    f.write(response.content)
+            except IOError as e:
+                _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
+                    str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
+        raise IOError('Failed to download server executable after %s attempts.' % _MAX_DOWNLOAD_ATTEMPTS)
+
     def download_latest_vanilla_server(self):
         """
         Downloads the latest vanilla server from the internet and writes the file to the server directory.
         The filename will be the full name of the version.
 
-        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
         :returns str: Name of the file
+        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
         """
         version, full_name, link = SERVER_LIST.latest_stable_version()
-
-        for attempt in range(_MAX_DOWNLOAD_ATTEMPTS):
-            _LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
-            try:
-                response = requests.get(link)
-                write_to = os.path.join(os.path.abspath(self.DIR), full_name)
-
-                _LOGGER.info('Done. Writing to %s ...' % write_to)
-
-                with open(write_to, 'wb') as f:
-                    f.write(response.content)
-
-                return full_name
-            except IOError as e:
-                _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
-                    str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
-
-        raise IOError('Failed to download server executable after %s attempts.' % _MAX_DOWNLOAD_ATTEMPTS)
+        _LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
+        self._download(link, full_name)
+        return full_name
 
     def _agree_eula(self):
         """
@@ -209,19 +216,31 @@ class Server:
 
     def autostart(self, *args, **kwargs):
         """
-        Starts the server and automatically downloads the latest stable version no jar is configured.
-        Updates the config with the new jar if one was not found.
+        Starts the server and automatically downloads the latest stable version no jar is configured. Updates the
+        config with the new jar.
+
+        If the jar is configured but not found in the filesystem, it will try to download it.
         """
         if not self.jar:
-            config_jar = CONFIG[SECTION_MAIN][USE_SERVER_JAR]
-            if config_jar:
-                self.jar = config_jar
-            else:
-                new_jar = self.download_latest_vanilla_server()
+            # Jar is not set
+            CONFIG[SECTION_MAIN][USE_SERVER_JAR] = self.download_latest_vanilla_server()
 
-                self.jar = new_jar
-                # Save to config
-                CONFIG[SECTION_MAIN][USE_SERVER_JAR] = new_jar
+        elif not os.path.exists(self.jarpath()):
+            # Jar is set but it doesn't exist
+            # Try to download the jar
+            versions = SERVER_LIST.versions()
+
+            found = [(version, full_name, link)
+                     for version, full_name, link in versions['stable'] + versions['snapshot']
+                     if full_name == self.jar]
+            if len(found) == 0:
+                raise FileNotFoundError('%s not found for download' % self.jar)
+            if len(found) > 1:
+                raise ValueError('More than one link found for %s: %s' % (self.jar, str(found)))
+
+            version, full_name, link = found[0]
+            _LOGGER.info('Downloading %s...' % link)
+            self._download(link, dest_name=full_name)
 
         assert self.jar
         self.start(*args, **kwargs)
