@@ -7,7 +7,7 @@ var isServerOn,
     peakActivitySpan,
     serverVersionSpan;
 
-window.addEventListener('load', function () {
+(function () {
     serverSwitchBtn = document.getElementById('server-switch');
     serverStatusSpan = document.getElementById('server-status');
     uptimeSpan = document.getElementById('uptime');
@@ -15,7 +15,7 @@ window.addEventListener('load', function () {
     serverVersionSpan = document.getElementById('server-version');
     initEventSource();
     initServerSwitchBtnListener();
-});
+})();
 
 function initEventSource() {
     var eventSource = new EventSource(MA_CONSTS.STATUS_PANEL_STREAM);

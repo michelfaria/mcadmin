@@ -56,8 +56,8 @@ class _ServerList(YamlFileIO):
             :returns: A dictionary of all Minecraft versions, their full name and their respective server links in the
                       following format:
                 {
-                    "stable": [(version, full_name, link)],
-                    "snapshot": [(version, full_name, link)]
+                    'stable': [(version, full_name, link)],
+                    'snapshot': [(version, full_name, link)],
                 }
 
                 The "stable" list is ordered by version number in descending order.
@@ -68,10 +68,12 @@ class _ServerList(YamlFileIO):
 
         for full_name, link in self.load().items():
             version = full_name.split('-', 1)[1].rsplit('.', 1)[0]
-            if re.fullmatch(r'[0-9.]+', version):
-                stable.append((version, full_name, link))
+            entry = (version, full_name, link)
+
+            if self._is_stable(version):
+                stable.append(entry)
             else:
-                snapshot.append((version, full_name, link))
+                snapshot.append(entry)
 
         # Sort the list of stable versions in descending order
         # lambda x :: x => tuple(version, full_name, link) :: x -> [int]
@@ -79,8 +81,12 @@ class _ServerList(YamlFileIO):
 
         return {
             'stable': stable,
-            'snapshot': snapshot
+            'snapshot': snapshot,
         }
+
+    @staticmethod
+    def _is_stable(version: str):
+        return re.fullmatch(r'[0-9.]+', version)
 
     def latest_stable_version(self):
         """

@@ -1,5 +1,8 @@
 import atexit
 import configparser
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 _CONFIG_PATH = 'config.ini'
 SECTION_MAIN = 'MAIN'
@@ -12,12 +15,14 @@ CONFIG[SECTION_MAIN] = {
 }
 CONFIG.read(_CONFIG_PATH)
 
+_LOGGER.debug('Config module loaded')
+
 
 # Save when exiting
 def exit_handler():
-    print('EXITINGGGGGGGGGGGGGGG')
+    _LOGGER.debug('Config exit handler called')
     with open(_CONFIG_PATH, 'w') as f:
         CONFIG.write(f)
 
-print('yooooooooooooooooooooo')
+
 atexit.register(exit_handler)

@@ -3,12 +3,12 @@
 var consoleBox;
 var consoleInput;
 
-window.addEventListener('load', function () {
+(function () {
     consoleBox = document.getElementById('console-box');
     consoleInput = document.getElementById('console-input');
     initEventSource();
     initConsoleInput();
-});
+})();
 
 function initEventSource() {
     var eventSource = new EventSource(MA_CONSTS.CONSOLE_PANEL_STREAM);

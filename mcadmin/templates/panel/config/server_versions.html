@@ -11,8 +11,58 @@ ng{% extends "panel/config/_template.html" %}
     {{ super() }}
     {{ list_flashed_messages() }}
 
-    <p>Current Version: {{ current_jar }}</p>
-    <form method="post">
+    <p>Current Version: {{ current_jar if current_jar else 'None' }}</p>
 
+    <form method="post">
+        <!-- This input should only be visible to the user when they tick the "Use custom" checkbox -->
+        <label class="jar-input hidden">
+            Filename:
+            <input name="jar_name" id="jar-input" type="text" value="{{ current_jar }}">
+        </label>
+
+        <!-- This version picker should be hidden if the "Use custom" checkbox is ticked -->
+        <label class="version-picker">
+            Version Picker
+            <select id="version-picker">
+
+                <!-- Default value -->
+                <option value="">-- Select a Version --</option>
+
+                <!-- Stable versions -->
+                {% for version, full_name, link in versions['stable'] %}
+                    <option class="stable-version" value="{{ full_name }}">{{ version }}</option>
+                {% endfor %}
+
+                <!-- Snapshot versions -->
+                {% for version, full_name, link in versions['snapshot'] %}
+                    <option class="snapshot-version hidden" value="{{ full_name }}">{{ version }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <!-- Ticking this should make the stable versions go hidden and make the snapshot versions appear.
+             Unticking this should have the reverse effect. -->
+        <label class="use-snapshot">
+            <input type="checkbox" id="use-snapshot">
+            Use a snapshot
+        </label>
+
+        <!-- Ticking this should make the "Use snapshot" checkbox disappear, as well as the version picker.
+             It should make the custom version input box appear.
+             When unticked, the reverse should happen. -->
+        <label>
+            <input type="checkbox" id="use-custom">
+            Use custom
+        </label>
+
+        {{ version_form.csrf_token }}
+
+        <button type="submit" class="mc-grn-btn">Change</button>
     </form>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script type="text/javascript"
+            src="{{ url_for('static', filename='js/panel/config/server_versions.js') }}"></script>
 {% endblock %}

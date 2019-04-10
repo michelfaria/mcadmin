@@ -1,7 +1,7 @@
 from flask import flash, redirect, url_for, render_template
 from flask_login import login_required
 
-from mcadmin.forms.server_properties import ServerPropertiesForm
+from mcadmin.forms.config.server_properties import ServerPropertiesForm
 from mcadmin.io.files.server_properties import SERVER_PROPERTIES
 from mcadmin.main import app
 
