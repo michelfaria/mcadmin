@@ -11,7 +11,7 @@ from mcadmin.exception import PublicError
 
 class EntryConflictError(PublicError):
     """
-    Raised when it is made an attempt to insert a duplicate element into an entry set where duplicates are not allowed.
+    Raised when it is made an attempt to insert a duplicate element into an entry _set where duplicates are not allowed.
     """
 
 

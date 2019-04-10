@@ -11,7 +11,7 @@ from subprocess import Popen, PIPE
 
 import requests
 
-from mcadmin.config import CONFIG, SECTION_MAIN, USE_SERVER_JAR
+from mcadmin.config import CONFIG
 from mcadmin.io.files.server_list import SERVER_LIST
 
 _EULA_TXT = 'eula.txt'
@@ -73,7 +73,7 @@ class Server:
 
     @property
     def jar(self):
-        return CONFIG[SECTION_MAIN][USE_SERVER_JAR]
+        return CONFIG.get_use_jar()
 
     def status(self):
         """
@@ -178,6 +178,7 @@ class Server:
                 _LOGGER.info('Done. Writing to %s ...' % write_to)
                 with open(write_to, 'wb') as f:
                     f.write(response.content)
+                return
             except IOError as e:
                 _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
                     str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
@@ -222,11 +223,11 @@ class Server:
         If the jar is configured but not found in the filesystem, it will try to download it.
         """
         if not self.jar:
-            # Jar is not set
-            CONFIG[SECTION_MAIN][USE_SERVER_JAR] = self.download_latest_vanilla_server()
+            # Jar is not _set
+            CONFIG.set_use_jar(self.download_latest_vanilla_server())
 
         elif not os.path.exists(self.jarpath()):
-            # Jar is set but it doesn't exist
+            # Jar is _set but it doesn't exist
             # Try to download the jar
             versions = SERVER_LIST.versions()
 
@@ -299,7 +300,7 @@ class Server:
                 # access the `proc` variable if it had changed by that point. On top of that, a lock for `proc` should
                 # not be acquired here because `proc.stdout.readline()` is blocking.
 
-                # Line being set to none indicates that the process is closed.
+                # Line being _set to none indicates that the process is closed.
                 line = self._proc.stdout.readline() \
                     if self._proc is not None and self._proc.poll() is None \
                     else None
@@ -359,7 +360,10 @@ class Server:
             raise ServerNotRunningError('Server needs to be running to do this')
 
 
-SERVER = Server('server_files')
+_SERVER_DIR = 'server_files'
+if not os.path.exists(_SERVER_DIR):
+    os.mkdir(_SERVER_DIR)
+SERVER = Server(_SERVER_DIR)
 
 # Register the _on_program_exit function to be ran before the Python interpreter quits.
 # noinspection PyProtectedMember
