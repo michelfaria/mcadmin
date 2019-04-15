@@ -1,4 +1,5 @@
 HIDDEN = 'hidden';
+NOT_APPLICABLE = 'N/A';
 MA_CONSTS = {
     SERVER_SHUTDOWN_ERR_CODE: 'mcadmin:err:server_not_running',
     CONSOLE_PANEL_STREAM: '/panel/console/stream',

@@ -4,6 +4,7 @@ import logging
 from flask import render_template, request, abort, Response
 from flask_login import login_required
 
+from mcadmin.config import CONFIG
 from mcadmin.io.server.server import SERVER, ServerAlreadyRunningError, ServerNotRunningError
 from mcadmin.main import app
 from mcadmin.util import require_json
@@ -80,10 +81,14 @@ def status_panel_stream():
     def generator():
         try:
             while True:
+                uptime = SERVER.uptime()
+                if uptime is None:
+                    uptime = -1
                 msg = {
                     'is_server_running': SERVER.is_running(),
-                    'uptime': 0,
-                    'peak_activity': 0
+                    'uptime': uptime,
+                    'peak_activity': 0,
+                    'server_version': CONFIG.get_use_jar()
                 }
                 yield 'data: ' + json.dumps(msg) + '\n\n'
                 with SERVER.STATUS_CHANGE:

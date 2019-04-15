@@ -1,11 +1,33 @@
-// mcadmin/static/js/status_panel.js
-
 var isServerOn,
     serverSwitchBtn,
     serverStatusSpan,
     uptimeSpan,
     peakActivitySpan,
     serverVersionSpan;
+
+/**
+ * @param seconds
+ * @constructor
+ * @extends EventEmitter
+ */
+function Uptime(seconds) {
+    this.seconds = seconds;
+}
+
+Uptime.prototype = Object.create(EventEmitter.prototype);
+
+Uptime.prototype.constructor = Uptime;
+
+Uptime.prototype.setSeconds = function (seconds) {
+    this.seconds = seconds;
+    this.emitEvent('change');
+};
+
+/**
+ * @type Uptime
+ */
+var uptime = new Uptime(-1);
+
 
 (function () {
     serverSwitchBtn = document.getElementById('server-switch');
@@ -15,6 +37,7 @@ var isServerOn,
     serverVersionSpan = document.getElementById('server-version');
     initEventSource();
     initServerSwitchBtnListener();
+    initUptimeCounter();
 })();
 
 function initEventSource() {
@@ -27,10 +50,11 @@ function initEventSource() {
 
     eventSource.onmessage = function (msg) {
         var data = JSON.parse(msg.data);
-
         var isServerRunning = data['is_server_running'];
-        var uptime = data['uptime'];
         var peakActivity = data['peak_activity'];
+        var serverVersion = data['server_version'];
+
+        uptime.setSeconds(data['uptime']);
 
         if (isServerRunning) {
             serverSwitchBtn.innerText = 'Turn OFF';
@@ -40,9 +64,13 @@ function initEventSource() {
             serverStatusSpan.innerText = 'OFF';
         }
 
-        isServerOn = isServerRunning;
+        if (serverVersion) {
+            serverVersionSpan.innerText = serverVersion;
+        } else {
+            serverVersionSpan.innerText = NOT_APPLICABLE;
+        }
 
-        uptimeSpan.innerText = uptime;
+        isServerOn = isServerRunning;
         peakActivitySpan.innerText = peakActivity;
     }
 }
@@ -70,4 +98,32 @@ function initServerSwitchBtnListener() {
     });
 }
 
-// https://stackoverflow.com/questions/9763441/milliseconds-to-time-in-javascript
+function initUptimeCounter() {
+    var seconds = 0;
+
+    uptime.addListener('change', function () {
+        /**
+         * @this Uptime
+         */
+        seconds = this.seconds;
+    });
+
+    setInterval(function () {
+        if (seconds > -1) {
+            seconds += 1;
+            var days = Math.floor(seconds / (3600 * 24));
+            var hours = Math.floor(seconds % (3600 * 24) / 3600);
+            var minutes = Math.floor(seconds % 3600 / 60);
+            var seconds_ = Math.floor(seconds % 60);
+            uptimeSpan.innerText = pad(days, 2) + ':' + pad(hours, 2) + ':'
+                + pad(minutes, 2) + ':' + pad(seconds_, 2);
+        } else {
+            uptimeSpan.innerText = NOT_APPLICABLE;
+        }
+    }, 1000);
+}
+
+function pad(num, size) {
+    var s = "000000000" + num;
+    return s.substr(s.length - size);
+}

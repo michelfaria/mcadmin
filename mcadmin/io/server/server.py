@@ -1,5 +1,6 @@
 import atexit
 import collections
+import datetime
 import glob
 import logging
 import os
@@ -25,6 +26,10 @@ _SIGTERM_WAIT_SECONDS = 30
 
 # Maximum amount of lines that there can be inside the console_output deque
 _CONSOLE_OUTPUT_MAX_LINES = 100
+
+
+def _timedelta_to_seconds(dt):
+    return dt.days * 86400 + dt.seconds
 
 
 class TooManyMatchesError(Exception):
@@ -55,6 +60,7 @@ class ServerStatus(Enum):
 
 
 class Server:
+
     def __init__(self, dir_):
         self.DIR = dir_
 
@@ -67,153 +73,14 @@ class Server:
         self.OUTPUT_UPDATE = threading.Condition()
 
         # Java Process Handle
-        # noinspection PyTypeChecker
-        self._proc = None  # type: Popen
+        self._proc = None  # type: Popen or None
         self._PROC_LOCK = threading.RLock()
+
+        self._start_time = None  # type: datetime.datetime or None
 
     @property
     def jar(self):
         return CONFIG.get_use_jar()
-
-    def status(self):
-        """
-        :returns ServerStatus:
-            ServerStatus.RUNNING: If server process is referenced and running
-            ServerStatus.CLOSED: If server process is referenced but has return code
-            ServerStatus.DISABLED: If server process is not referenced
-        """
-        with self._PROC_LOCK:
-            if self._proc is None:
-                return ServerStatus.DISABLED
-            return_code = self._proc.poll()
-            if return_code is None:
-                return ServerStatus.RUNNING
-            return ServerStatus.CLOSED
-
-    def is_running(self):
-        return self.status() == ServerStatus.RUNNING
-
-    def _notify_status_change(self):
-        """
-        Notifies all threads waiting on the self.STATUS_CHANGE Condition.
-        """
-        with self.STATUS_CHANGE:
-            self.STATUS_CHANGE.notify_all()
-
-    def stop(self):
-        """
-        Stops the server.
-
-        It will first try to stop the server gracefully with a SIGTERM, but if the server does not close within
-        _SIGTERM_WAIT_SECONDS seconds, the server process will be forcefully terminated.
-
-        This method notifies a status change.
-
-        :raises ServerNotRunningError: if the server is not running
-        """
-        with self._PROC_LOCK:
-            status = self.status()
-
-            if status == ServerStatus.RUNNING:
-                _LOGGER.info('Waiting at most %s seconds for server to shut down...' % _SIGTERM_WAIT_SECONDS)
-                self._proc.send_signal(signal.SIGTERM)
-                self._proc.wait(_SIGTERM_WAIT_SECONDS)
-
-                return_code = self._proc.poll()
-
-                if return_code is None:
-                    _LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
-                    self._proc.terminate()
-
-            elif status == ServerStatus.CLOSED:
-                _LOGGER.info('Server process was referenced, but it was already closed. Discarding reference.')
-
-            else:
-                assert status == ServerStatus.DISABLED
-                raise ServerNotRunningError('Server already stopped')
-
-            self._proc = None
-
-        _LOGGER.info('Server process closed.')
-        self._notify_status_change()
-
-    def _on_program_exit(self):
-        """
-        Close the server before exiting the Python interpreter.
-        """
-        if self.is_running():
-            _LOGGER.info('Python is exiting: terminating server process.')
-            self.stop()
-
-    def locate_server_file_path(self):
-        """
-        Locates the server executable .jar file to be ran by MCAdmin.
-
-        The method will look for any files inside the server directory that are named `minecraft_server-<version>.jar`.
-
-        :raise FileNotFoundError: if no server executables were found.
-        :raise TooManyMatchesError: if more than one server executable was found.
-        :return: The filename of the server executable.
-        """
-        matches = glob.glob(os.path.join(self.DIR, 'minecraft_server-*.jar'))
-        if len(matches) == 0:
-            raise FileNotFoundError(
-                'Did not find a server file in directory %s/ (abspath: %s)' % (self.DIR, os.path.abspath(self.DIR)))
-        if len(matches) > 1:
-            raise TooManyMatchesError('Found more than one server executable in %s: %s' % (self.DIR, str(matches)))
-        return os.path.basename(matches[0])
-
-    def _download(self, link, dest_name):
-        """
-        Downloads a file to the server directory.
-
-        :param link: Link to download
-        :param dest_name: Destination name of the file
-        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
-        """
-        for attempt in range(_MAX_DOWNLOAD_ATTEMPTS):
-            try:
-                response = requests.get(link)
-                write_to = os.path.join(os.path.abspath(self.DIR), dest_name)
-                _LOGGER.info('Done. Writing to %s ...' % write_to)
-                with open(write_to, 'wb') as f:
-                    f.write(response.content)
-                return
-            except IOError as e:
-                _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
-                    str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
-        raise IOError('Failed to download server executable after %s attempts.' % _MAX_DOWNLOAD_ATTEMPTS)
-
-    def download_latest_vanilla_server(self):
-        """
-        Downloads the latest vanilla server from the internet and writes the file to the server directory.
-        The filename will be the full name of the version.
-
-        :returns str: Name of the file
-        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
-        """
-        version, full_name, link = SERVER_LIST.latest_stable_version()
-        _LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
-        self._download(link, full_name)
-        return full_name
-
-    def _agree_eula(self):
-        """
-        Creates an `eula.txt` file inside the server directory.
-        Writes the text required to agree to the Mojang EULA to the file.
-        """
-        with open(self.eulapath(), 'w') as f:
-            f.write(
-                '#By changing the setting below to TRUE you are indicating your agreement to our EULA '
-                '(https://account.mojang.com/documents/minecraft_eula)\n'
-                '#Mon Mar 20 21:15:37 PDT 2017\n'
-                'eula=true\n')
-
-    def eulapath(self):
-        return os.path.join(self.DIR, _EULA_TXT)
-
-    def jarpath(self):
-        return os.path.join(self.DIR, self.jar)
 
     def autostart(self, *args, **kwargs):
         """
@@ -224,7 +91,7 @@ class Server:
         """
         if not self.jar:
             # Jar is not _set
-            CONFIG.set_use_jar(self.download_latest_vanilla_server())
+            CONFIG.set_use_jar(self._download_latest_vanilla_server())
 
         elif not os.path.exists(self.jarpath()):
             # Jar is _set but it doesn't exist
@@ -283,6 +150,127 @@ class Server:
             self._start_console_thread()
             self._start_watchdog_thread()
             self._notify_status_change()
+            self._start_time = datetime.datetime.now()
+
+    def stop(self):
+        """
+        Stops the server.
+
+        It will first try to stop the server gracefully with a SIGTERM, but if the server does not close within
+        _SIGTERM_WAIT_SECONDS seconds, the server process will be forcefully terminated.
+
+        This method notifies a status change.
+
+        :raises ServerNotRunningError: if the server is not running
+        """
+        with self._PROC_LOCK:
+            status = self.status()
+
+            if status == ServerStatus.RUNNING:
+                _LOGGER.info('Waiting at most %s seconds for server to shut down...' % _SIGTERM_WAIT_SECONDS)
+                self._proc.send_signal(signal.SIGTERM)
+                self._proc.wait(_SIGTERM_WAIT_SECONDS)
+
+                return_code = self._proc.poll()
+
+                if return_code is None:
+                    _LOGGER.warning('Server SIGTERM timed out; terminating forcefully.')
+                    self._proc.terminate()
+
+            elif status == ServerStatus.CLOSED:
+                _LOGGER.info('Server process was referenced, but it was already closed. Discarding reference.')
+
+            else:
+                assert status == ServerStatus.DISABLED
+                raise ServerNotRunningError('Server already stopped')
+
+            self._proc = None
+
+        _LOGGER.info('Server process closed.')
+        self._notify_status_change()
+        self._start_time = None
+
+    def is_running(self):
+        return self.status() == ServerStatus.RUNNING
+
+    def uptime(self):
+        """
+        :return int or None: The uptime of the server in seconds.
+        """
+        if self._start_time is None:
+            return None
+        now = datetime.datetime.now()
+        delta = now - self._start_time
+        return _timedelta_to_seconds(delta)
+
+    def status(self):
+        """
+        :returns ServerStatus:
+            ServerStatus.RUNNING: If server process is referenced and running
+            ServerStatus.CLOSED: If server process is referenced but has return code
+            ServerStatus.DISABLED: If server process is not referenced
+        """
+        with self._PROC_LOCK:
+            if self._proc is None:
+                return ServerStatus.DISABLED
+            return_code = self._proc.poll()
+            if return_code is None:
+                return ServerStatus.RUNNING
+            return ServerStatus.CLOSED
+
+    def locate_server_file_path(self):
+        """
+        Locates the server executable .jar file to be ran by MCAdmin.
+
+        The method will look for any files inside the server directory that are named `minecraft_server-<version>.jar`.
+
+        :raise FileNotFoundError: if no server executables were found.
+        :raise TooManyMatchesError: if more than one server executable was found.
+        :return: The filename of the server executable.
+        """
+        matches = glob.glob(os.path.join(self.DIR, 'minecraft_server-*.jar'))
+        if len(matches) == 0:
+            raise FileNotFoundError(
+                'Did not find a server file in directory %s/ (abspath: %s)' % (self.DIR, os.path.abspath(self.DIR)))
+        if len(matches) > 1:
+            raise TooManyMatchesError('Found more than one server executable in %s: %s' % (self.DIR, str(matches)))
+        return os.path.basename(matches[0])
+
+    def eulapath(self):
+        return os.path.join(self.DIR, _EULA_TXT)
+
+    def jarpath(self):
+        return os.path.join(self.DIR, self.jar)
+
+    def input_line(self, text):
+        """
+        Sends an input to the server process.
+
+        :param text: Input to send
+        :raise ServerNotRunningError: if the server is not running
+        """
+        with self._PROC_LOCK:
+            self._require_server()
+            if isinstance(text, str):
+                text = text.encode()
+            if not text.endswith(b'\n'):
+                text += b'\n'
+            _LOGGER.debug('Input: ' + str(text))
+            self._proc.stdin.write(text)
+            self._proc.stdin.flush()
+
+    def _download_latest_vanilla_server(self):
+        """
+        Downloads the latest vanilla server from the internet and writes the file to the server directory.
+        The filename will be the full name of the version.
+
+        :returns str: Name of the file
+        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
+        """
+        version, full_name, link = SERVER_LIST.latest_stable_version()
+        _LOGGER.info('Downloading vanilla %s server executable from %s...' % (version, link))
+        self._download(link, full_name)
+        return full_name
 
     def _start_console_thread(self):
         """
@@ -335,22 +323,53 @@ class Server:
 
         threading.Thread(target=_watchdog_worker).start()
 
-    def input_line(self, text):
+    def _notify_status_change(self):
         """
-        Sends an input to the server process.
+        Notifies all threads waiting on the self.STATUS_CHANGE Condition.
+        """
+        with self.STATUS_CHANGE:
+            self.STATUS_CHANGE.notify_all()
 
-        :param text: Input to send
-        :raise ServerNotRunningError: if the server is not running
+    def _on_program_exit(self):
         """
-        with self._PROC_LOCK:
-            self._require_server()
-            if isinstance(text, str):
-                text = text.encode()
-            if not text.endswith(b'\n'):
-                text += b'\n'
-            _LOGGER.debug('Input: ' + str(text))
-            self._proc.stdin.write(text)
-            self._proc.stdin.flush()
+        Close the server before exiting the Python interpreter.
+        """
+        if self.is_running():
+            _LOGGER.info('Python is exiting: terminating server process.')
+            self.stop()
+
+    def _download(self, link, dest_name):
+        """
+        Downloads a file to the server directory.
+
+        :param link: Link to download
+        :param dest_name: Destination name of the file
+        :raises IOError: If download failed after _MAX_DOWNLOAD_ATTEMPTS attempts
+        """
+        for attempt in range(_MAX_DOWNLOAD_ATTEMPTS):
+            try:
+                response = requests.get(link)
+                write_to = os.path.join(os.path.abspath(self.DIR), dest_name)
+                _LOGGER.info('Done. Writing to %s ...' % write_to)
+                with open(write_to, 'wb') as f:
+                    f.write(response.content)
+                return
+            except IOError as e:
+                _LOGGER.error('Could not download server executable. Error: [%s] %s' % (
+                    str(e), '... Retrying' if attempt + 1 < _MAX_DOWNLOAD_ATTEMPTS else ''))
+        raise IOError('Failed to download server executable after %s attempts.' % _MAX_DOWNLOAD_ATTEMPTS)
+
+    def _agree_eula(self):
+        """
+        Creates an `eula.txt` file inside the server directory.
+        Writes the text required to agree to the Mojang EULA to the file.
+        """
+        with open(self.eulapath(), 'w') as f:
+            f.write(
+                '#By changing the setting below to TRUE you are indicating your agreement to our EULA '
+                '(https://account.mojang.com/documents/minecraft_eula)\n'
+                '#Mon Mar 20 21:15:37 PDT 2017\n'
+                'eula=true\n')
 
     def _require_server(self):
         """
