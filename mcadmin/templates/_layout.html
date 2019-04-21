@@ -7,13 +7,20 @@
     {% endblock %}
 </head>
 <body>
+
+<header>
+    {% block header %}{% endblock %}
+</header>
+
 <main>
     {% block content %}{% endblock %}
 </main>
+
 <footer>
     {% block footer %}
     {% endblock %}
 </footer>
+
 {% block scripts %}
     <script type="text/javascript" src="{{ url_for('static', filename='js/constants.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='js/polyfill/event_source.js') }}"></script>
