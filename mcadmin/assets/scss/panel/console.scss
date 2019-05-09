@@ -3,21 +3,28 @@
 .console-container {
   @include center-flex;
 
-  max-width: 90%;
+  margin: 10px;
   min-width: 600px;
+
+  flex-direction: column;
 }
 
 .console-box {
-  margin: 10px;
-
-  min-width: 80vw;
   width: 80vw;
   height: 80vh;
-
   background: black;
   color: white;
 }
 
 .console-line:before {
   content: ">";
+}
+
+#console-input {
+  width: 100%;
+  margin: 0 10px 0 10px;
+  color: white;
+  background: black;
+  border: 0;
+  line-height: 20px;
 }

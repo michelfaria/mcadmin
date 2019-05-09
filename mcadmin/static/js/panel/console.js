@@ -1,6 +1,6 @@
 // mcadmin/static/js/console_panel.js
 
-var consoleBox;
+var consoleBox; // TextArea
 var consoleInput;
 
 (function () {
@@ -8,6 +8,9 @@ var consoleInput;
     consoleInput = document.getElementById('console-input');
     initEventSource();
     initConsoleInput();
+
+    // Strip spaces around console text
+    consoleBox.value = consoleBox.value.trim();
 })();
 
 function initEventSource() {

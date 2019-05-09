@@ -5,19 +5,22 @@
 
 {% block head %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/console.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',
+    filename='css/panel/console.css') }}">
 {% endblock %}
 
 {% block content %}
     {{ super() }}
     {{ list_flashed_messages() }}
-    <div class="mc-card console-container">
-        <!--suppress HtmlFormInputWithoutLabel -->
-        <textarea id="console-box" class="console-box" readonly>
+    <div class="mc-card">
+        <div class="console-container">
+            <!--suppress HtmlFormInputWithoutLabel -->
+            <textarea id="console-box" class="console-box"
+                      readonly>
             {{ console_history }}
-        </textarea>
-        <label for="console-input">Input</label>
-        <input id="console-input" type="text">
+            </textarea>
+            <input id="console-input" type="text">
+        </div>
     </div>
 {% endblock %}
 
