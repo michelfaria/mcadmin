@@ -1,4 +1,3 @@
-// mcadmin/assets/scss/configuration_panel/edit_server_properties.scss
 @import "mixins";
 
 .properties-editor {
@@ -9,4 +8,18 @@
   height: 500px;
   max-width: 90vw;
   max-height: 90vw;
+}
+
+.config {
+}
+
+form {
+  height: 400px;
+  width: 800px;
+  margin: 20px;
+}
+
+.properties-textarea {
+  height: 100%;
+  width: 100%;
 }

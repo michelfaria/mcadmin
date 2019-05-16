@@ -6,20 +6,44 @@
 
 {% block head %}
     {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panel/config/template.css') }}">
 {% endblock %}
+
+{% macro sidebar_entry(icon, label, url) %}
+    <div class="sidebar-entry">
+        <a href="{{ url }}" class="sidebar-link">
+            <img src="{{ icon }}" alt="Icon" class="sidebar-icon"/>
+            {{ label }}
+        </a>
+    </div>
+{% endmacro %}
 
 {% block content %}
     {{ super() }}
-    <div>
-        <h2>SIDEBAR</h2>
-        <a href="{{ url_for('edit_server_properties') }}">Properties</a>
-        <a href="{{ url_for('server_versions') }}">Manage Server Versions</a>
-        <a href="#">Manage Plugins</a>
-        <a href="#">Manage Files</a>
-    </div>
-    <div class="mc-card">
-        <h1>Configuration: {{ cfg_name }}</h1>
-        {% block in_card %}
-        {% endblock %}
+    <div class="config">
+        <div class="mc-card config-sidebar">
+            <div class="sidebar-entries">
+                {{ sidebar_entry(
+                    url_for('static', filename='img/icons/book.png'),
+                    'Properties',
+                    url_for('edit_server_properties')) }}
+                {{ sidebar_entry(
+                    url_for('static', filename='img/icons/command_block.png'),
+                    'Manage Server Versions',
+                    url_for('server_versions')) }}
+                {{ sidebar_entry(
+                    url_for('static', filename='img/icons/lab.png'),
+                    'Manage Plugins',
+                    '#') }}
+                {{ sidebar_entry(
+                    url_for('static', filename='img/icons/chest.png'),
+                    'Manage Files',
+                    '#') }}
+            </div>
+        </div>
+        <div class="mc-card config-card">
+            {% block in_card %}
+            {% endblock %}
+        </div>
     </div>
 {% endblock %}

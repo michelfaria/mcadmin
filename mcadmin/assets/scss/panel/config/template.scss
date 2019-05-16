@@ -1,0 +1,35 @@
+@import "mixins";
+
+.config {
+  @include center-flex;
+}
+
+.config-sidebar {
+  align-self: baseline;
+}
+
+.config-card {
+  align-self: end;
+  padding: 10px;
+}
+
+.sidebar-entries {
+  margin: 10px;
+}
+
+.sidebar-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-icon {
+  max-width: 50px;
+  max-height: 50px;
+}
+
+.sidebar-link {
+  text-align: center;
+  margin: 5px 0 0 0;
+  max-width: 100px;
+}

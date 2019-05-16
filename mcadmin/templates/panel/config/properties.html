@@ -10,8 +10,9 @@
 {% block in_card %}
     {{ super() }}
     {{ list_flashed_messages() }}
+    <h1>Properties</h1>
     <form method="post">
-        {{ render_field(form.properties) }}
+        {{ form.properties }}
         {{ form.csrf_token }}
         <button type="submit" class="mc-grn-btn">Submit</button>
     </form>

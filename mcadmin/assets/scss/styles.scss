@@ -34,6 +34,11 @@ main {
   }
 }
 
+a:link, a:visited, a:hover, a:active {
+  text-decoration: none;
+  color: $a-color;
+}
+
 .hidden {
   display: none;
 }

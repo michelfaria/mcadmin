@@ -9,4 +9,7 @@ class ServerPropertiesForm(FlaskForm):
         validators=[
             validators.Length(0, 10_000, 'Length of properties file cannot exceed 10,000 characters.')
         ],
-        widget=TextArea())
+        widget=TextArea(),
+        render_kw={
+            'class': 'properties-textarea'
+        })
