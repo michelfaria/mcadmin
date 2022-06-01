@@ -1,7 +1,7 @@
 # mcadmin
 mcadmin is a web-interface for managing and deploying Minecraft servers.
 
-As this repository is discontinued since 2019, it is not compatible with the most recent version of mcversions.net. Only Minecraft server versions up until 1.13.2 are supported.
+**As this repository is discontinued since 2019, it is not compatible with the most recent version of mcversions.net. Only Minecraft server versions up until 1.13.2 are supported.**
 
 ## Running (Testing)
 
