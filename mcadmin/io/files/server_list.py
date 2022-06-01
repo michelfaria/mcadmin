@@ -34,7 +34,7 @@ class _ServerList(YamlFileIO):
             }
         """
         _LOGGER.info('Updating Minecraft server executable link repository...')
-        page = requests.get('https://mcversions.net/')
+        page = requests.get('https://web.archive.org/web/20190130100707/https://mcversions.net/')
         _LOGGER.info('Got list, length: %s.' % len(page.text))
 
         tree = lxml.html.fromstring(page.text)
